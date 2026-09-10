@@ -46,13 +46,17 @@ class ResolvedAudioStream {
       for (final entry in rawHeaders.entries) {
         final key = entry.key.toString().trim();
         final value = entry.value?.toString() ?? '';
-        if (key.isNotEmpty &&
-            !key.contains('\r') &&
-            !key.contains('\n') &&
-            !value.contains('\r') &&
-            !value.contains('\n')) {
-          headers[key] = value;
+        if (key.isEmpty ||
+            key.contains('\r') ||
+            key.contains('\n') ||
+            value.contains('\r') ||
+            value.contains('\n')) {
+          throw const StreamResolutionException(
+            'invalid_stream_headers',
+            'The provider returned invalid stream request headers.',
+          );
         }
+        headers[key] = value;
       }
     }
 
@@ -70,15 +74,19 @@ class ResolvedAudioStream {
     return ResolvedAudioStream(
       uri: uri,
       headers: Map.unmodifiable(headers),
-      contentType: (map['content_type'] ?? '').toString(),
-      provider: (map['provider'] ?? '').toString(),
-      quality: (map['quality'] ?? '').toString(),
+      contentType: (map['content_type'] ?? '').toString().trim(),
+      provider: (map['provider'] ?? '').toString().trim(),
+      quality: (map['quality'] ?? '').toString().trim(),
       expiresAt: expiresAt,
     );
   }
 
   bool get isExpired =>
       expiresAt != null && DateTime.now().isAfter(expiresAt!);
+
+  bool get isExpiringSoon =>
+      expiresAt != null &&
+      DateTime.now().add(const Duration(seconds: 30)).isAfter(expiresAt!);
 }
 
 class StreamResolutionException implements Exception {
@@ -121,7 +129,9 @@ class StreamingService {
       if (preparedContext != null && preparedContext.isNotEmpty)
         'prepared_context': preparedContext,
     };
-    final payload = base64Url.encode(utf8.encode(jsonEncode(request))).replaceAll('=', '');
+    final payload = base64Url
+        .encode(utf8.encode(jsonEncode(request)))
+        .replaceAll('=', '');
     final result = await PlatformBridge.invokeExtensionAction(
       normalizedExtensionId,
       '$_hostResolveStreamActionPrefix$payload',
