@@ -1,50 +1,80 @@
-name: Verify Mobile Streaming
+name: One-shot Mobile Engine Integration
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - ci/integrate-mobile-engine-20260910-1
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify:
-    name: Verify streaming changes
+  integrate:
+    name: Patch, verify, and commit mobile streaming engine
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout integration scripts
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
-
-      - name: Setup Go
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
         with:
-          go-version-file: go_backend/go.mod
-          cache-dependency-path: go_backend/go.sum
+          path: ci-src
 
-      - name: Check Go formatting
-        working-directory: go_backend
-        run: test -z "$(gofmt -l .)"
+      - name: Checkout feature branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: feature/streaming-web-vietnamese
+          fetch-depth: 0
+          path: target
 
-      - name: Go vet
-        working-directory: go_backend
-        run: go vet ./...
-
-      - name: Go tests
-        working-directory: go_backend
-        run: go test ./...
+      - name: Apply additive streaming patch
+        run: python3 ci-src/tools/apply_mobile_streaming_patch.py target
 
       - name: Setup Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
         with:
           channel: stable
-          flutter-version-file: .fvmrc
+          flutter-version-file: target/.fvmrc
           cache: true
 
+      - name: Format changed Dart files
+        working-directory: target
+        run: |
+          dart format \
+            lib/services/music_player_service.dart \
+            lib/screens/now_playing_screen.dart \
+            lib/screens/home_tab_widgets.dart \
+            lib/screens/album_screen.dart \
+            lib/screens/playlist_screen.dart
+
+      - name: Check patch whitespace
+        working-directory: target
+        run: git diff --check
+
       - name: Get Flutter dependencies
+        working-directory: target
         run: flutter pub get
 
       - name: Flutter analyze
+        working-directory: target
         run: flutter analyze
 
       - name: Flutter tests
+        working-directory: target
         run: flutter test
+
+      - name: Commit verified mobile streaming integration
+        working-directory: target
+        run: |
+          if git diff --quiet; then
+            echo "No integration changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            lib/services/music_player_service.dart \
+            lib/screens/now_playing_screen.dart \
+            lib/screens/home_tab_widgets.dart \
+            lib/screens/album_screen.dart \
+            lib/screens/playlist_screen.dart
+          git commit -m "feat(streaming): integrate online playback with mobile player"
+          git push origin HEAD:feature/streaming-web-vietnamese
