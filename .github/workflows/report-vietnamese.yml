@@ -2,12 +2,6 @@ name: Report Vietnamese Coverage
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feature/streaming-web-vietnamese
-    paths:
-      - ".github/workflows/report-vietnamese.yml"
-      - "lib/l10n/arb/app_vi.arb"
 
 permissions:
   contents: read
@@ -40,7 +34,3 @@ jobs:
               value = str(base[key]).replace('\n', '\\n')
               print(json.dumps({'key': key, 'en': value}, ensure_ascii=False))
           PY
-
-# This workflow is also updated deliberately after translation batches so the
-# report and the full branch verification run against the bot-created commit.
-# Batch 4 checkpoint.
