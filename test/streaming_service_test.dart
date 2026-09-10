@@ -19,6 +19,55 @@ void main() {
       expect(decoded!.extensionId, 'provider-a');
       expect(decoded.trackId, 'track-123');
       expect(decoded.quality, 'LOSSLESS');
+      expect(decoded.requiresProviderPreparation, isFalse);
+    });
+
+    test('preserves cross-provider match metadata without prepared secrets', () {
+      const request = StreamMediaRequest(
+        extensionId: 'qobuz-provider',
+        trackId: 'spotify-123',
+        quality: 'HI_RES',
+        sourceProviderId: 'spotify',
+        isrc: 'USABC1234567',
+        trackName: 'Example Song',
+        artistName: 'Example Artist',
+        durationMs: 201000,
+        deezerId: 'deezer-456',
+      );
+
+      final encoded = encodeStreamMediaSource(request);
+      expect(encoded, isNot(contains('USABC1234567')));
+      expect(encoded, isNot(contains('prepared_context')));
+
+      final decoded = decodeStreamMediaSource(encoded)!;
+      expect(decoded.sourceProviderId, 'spotify');
+      expect(decoded.trackId, 'spotify-123');
+      expect(decoded.isrc, 'USABC1234567');
+      expect(decoded.trackName, 'Example Song');
+      expect(decoded.artistName, 'Example Artist');
+      expect(decoded.durationMs, 201000);
+      expect(decoded.deezerId, 'deezer-456');
+      expect(decoded.requiresProviderPreparation, isTrue);
+    });
+
+    test('skips preparation when source and target provider are the same', () {
+      const request = StreamMediaRequest(
+        extensionId: 'Qobuz-Web',
+        trackId: 'native-123',
+        sourceProviderId: 'qobuz-web',
+      );
+      expect(request.requiresProviderPreparation, isFalse);
+    });
+
+    test('keeps legacy descriptors provider-native for compatibility', () {
+      const request = StreamMediaRequest(
+        extensionId: 'provider-a',
+        trackId: 'native-123',
+      );
+      final decoded = decodeStreamMediaSource(encodeStreamMediaSource(request));
+      expect(decoded, isNotNull);
+      expect(decoded!.sourceProviderId, isEmpty);
+      expect(decoded.requiresProviderPreparation, isFalse);
     });
 
     test('rejects malformed descriptors', () {
