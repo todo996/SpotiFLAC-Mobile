@@ -1,0 +1,19 @@
+{
+  "name": "spotiflac-mobile-monorepo",
+  "private": true,
+  "workspaces": [
+    "webapp"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=spotiflac-web",
+    "typecheck": "npm run typecheck --workspace=spotiflac-web"
+  },
+  "dependencies": {
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
