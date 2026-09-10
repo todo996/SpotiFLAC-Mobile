@@ -2,10 +2,8 @@ import 'dart:convert';
 
 import 'package:spotiflac_android/services/platform_bridge.dart';
 
-const _hostPrepareStreamActionPrefix =
-    '__spotiflac_host_prepare_stream_v1__:';
-const _hostResolveStreamActionPrefix =
-    '__spotiflac_host_resolve_stream_v1__:';
+const _hostPrepareStreamActionPrefix = '__spotiflac_host_prepare_stream_v1__:';
+const _hostResolveStreamActionPrefix = '__spotiflac_host_resolve_stream_v1__:';
 const _streamMediaSourcePrefix = 'spotiflac-stream-v1:';
 
 class StreamMediaRequest {
@@ -105,7 +103,8 @@ StreamMediaRequest? decodeStreamMediaSource(String source) {
   }
 }
 
-bool isStreamMediaSource(String source) => decodeStreamMediaSource(source) != null;
+bool isStreamMediaSource(String source) =>
+    decodeStreamMediaSource(source) != null;
 
 class ResolvedAudioStream {
   final Uri uri;
@@ -183,8 +182,7 @@ class ResolvedAudioStream {
     );
   }
 
-  bool get isExpired =>
-      expiresAt != null && DateTime.now().isAfter(expiresAt!);
+  bool get isExpired => expiresAt != null && DateTime.now().isAfter(expiresAt!);
 
   bool get isExpiringSoon =>
       expiresAt != null &&
@@ -219,9 +217,7 @@ class StreamingService {
     Map<String, dynamic>? preparedContext,
   }) async {
     var providerTrackId = request.trackId;
-    var effectivePreparedContext = <String, dynamic>{
-      if (preparedContext != null) ...preparedContext,
-    };
+    var effectivePreparedContext = <String, dynamic>{...?preparedContext};
 
     if (request.requiresProviderPreparation) {
       final prepared = await _prepareRequest(request);
