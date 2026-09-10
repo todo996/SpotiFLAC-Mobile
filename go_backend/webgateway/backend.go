@@ -12,6 +12,7 @@ import (
 type Backend interface {
 	Search(query string, limit int) (json.RawMessage, error)
 	ResolveStream(providerID, trackID, quality string, preparedContext map[string]any) (json.RawMessage, error)
+	Providers() (json.RawMessage, error)
 	ProviderCount() int
 }
 
@@ -41,6 +42,14 @@ func (*CoreBackend) ResolveStream(providerID, trackID, quality string, preparedC
 	}
 
 	payload, err := gobackend.ResolveExtensionStreamJSON(providerID, trackID, quality, preparedJSON)
+	if err != nil {
+		return nil, err
+	}
+	return json.RawMessage(payload), nil
+}
+
+func (*CoreBackend) Providers() (json.RawMessage, error) {
+	payload, err := gobackend.GetWebProviderInventoryJSON()
 	if err != nil {
 		return nil, err
 	}
