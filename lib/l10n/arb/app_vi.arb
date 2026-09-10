@@ -1,0 +1,95 @@
+{
+  "@@locale": "vi",
+  "@@last_modified": "2026-09-10",
+  "appName": "SpotiFLAC Mobile",
+  "navHome": "Trang chủ",
+  "navLibrary": "Thư viện",
+  "navSettings": "Cài đặt",
+  "navStore": "Kho tiện ích",
+  "homeTitle": "Trang chủ",
+  "homeSubtitle": "Dán liên kết được hỗ trợ hoặc nhập tên để tìm",
+  "homeEmptyTitle": "Chưa có nguồn tìm kiếm nào",
+  "homeEmptySubtitle": "Cài tiện ích để tiếp tục.",
+  "homeSupports": "Hỗ trợ liên kết bài hát, album, danh sách phát và nghệ sĩ",
+  "homeRecent": "Gần đây",
+  "historyFilterAll": "Tất cả",
+  "historyFilterAlbums": "Album",
+  "historyFilterSingles": "Đĩa đơn",
+  "historySearchHint": "Tìm trong lịch sử...",
+  "settingsTitle": "Cài đặt",
+  "settingsDownload": "Tải xuống",
+  "settingsAppearance": "Giao diện",
+  "settingsExtensions": "Tiện ích",
+  "settingsAbout": "Giới thiệu",
+  "downloadTitle": "Tải xuống",
+  "downloadAskQualitySubtitle": "Hỏi chất lượng trước mỗi lần tải",
+  "downloadFilenameFormat": "Cách đặt tên tệp",
+  "downloadSingleFilenameFormat": "Cách đặt tên tệp cho đĩa đơn",
+  "downloadSingleFilenameFormatDescription": "Mẫu tên tệp dành cho đĩa đơn và EP. Dùng cùng các thẻ như định dạng album.",
+  "downloadFolderOrganization": "Cách sắp xếp thư mục",
+  "appearanceTitle": "Giao diện",
+  "appearanceThemeSystem": "Theo hệ thống",
+  "appearanceThemeLight": "Sáng",
+  "appearanceThemeDark": "Tối",
+  "appearanceDynamicColor": "Màu động",
+  "appearanceDynamicColorSubtitle": "Dùng màu lấy từ hình nền của thiết bị",
+  "appearanceHistoryView": "Kiểu hiển thị lịch sử",
+  "appearanceHistoryViewList": "Danh sách",
+  "appearanceHistoryViewGrid": "Lưới",
+  "optionsPrimaryProvider": "Nguồn tìm kiếm chính",
+  "optionsPrimaryProviderSubtitle": "Nguồn được dùng khi tìm theo tên bài hát hoặc album",
+  "optionsUsingExtension": "Đang dùng tiện ích: {extensionName}",
+  "@optionsUsingExtension": {
+    "placeholders": {
+      "extensionName": {
+        "type": "String"
+      }
+    }
+  },
+  "optionsDefaultSearchTab": "Tab tìm kiếm mặc định",
+  "optionsDefaultSearchTabSubtitle": "Chọn tab được mở trước khi xem kết quả tìm kiếm mới.",
+  "optionsAutoFallback": "Tự động thử nguồn khác",
+  "optionsAutoFallbackSubtitle": "Thử nguồn khác nếu tải xuống thất bại",
+  "optionsEmbedLyrics": "Nhúng lời bài hát",
+  "optionsEmbedLyricsSubtitle": "Lưu lời bài hát đồng bộ cùng các bài đã tải xuống",
+  "optionsReplayGain": "ReplayGain",
+  "optionsReplayGainSubtitleOn": "Phân tích độ lớn âm thanh và nhúng thẻ ReplayGain (EBU R128)",
+  "optionsReplayGainSubtitleOff": "Đang tắt: không thêm thẻ chuẩn hóa âm lượng",
+  "trackReplayGain": "Phân tích lại ReplayGain",
+  "trackReplayGainScanning": "Đang phân tích âm lượng...",
+  "trackReplayGainSuccess": "Đã thêm thẻ ReplayGain",
+  "trackReplayGainFailed": "Không thể thêm thẻ ReplayGain",
+  "selectionReplayGainCount": "ReplayGain ({count})",
+  "@selectionReplayGainCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "replayGainBatchConfirmTitle": "Thêm ReplayGain",
+  "replayGainBatchConfirmMessage": "Phân tích âm lượng và ghi thẻ ReplayGain cho {count} bài hát?",
+  "@replayGainBatchConfirmMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "replayGainBatchAnalyzing": "Đang phân tích ReplayGain...",
+  "replayGainBatchSuccess": "Đã thêm ReplayGain cho {success}/{total} bài hát",
+  "@replayGainBatchSuccess": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "replayGainUnsupportedDecoder": "Không thể phân tích một số bài vì codec âm thanh không được bộ giải mã ReplayGain hỗ trợ. Các tệp đó không bị thay đổi.",
+  "optionsArtistTagMode": "Cách ghi tên nghệ sĩ",
+  "optionsArtistTagModeDescription": "Chọn cách ghi nhiều nghệ sĩ vào thẻ thông tin của tệp nhạc.",
+  "optionsArtistTagModeJoined": "Gộp thành một giá trị"
+}
