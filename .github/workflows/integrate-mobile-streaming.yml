@@ -1,16 +1,17 @@
-name: Verify Mobile Streaming
+name: One-shot Full Verification
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - ci/manual-check-20260910-1
 
 permissions:
   contents: read
 
 jobs:
-  verify:
-    name: Verify streaming changes
+  verify-go-flutter:
+    name: Go + Flutter
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -48,3 +49,27 @@ jobs:
 
       - name: Flutter tests
         run: flutter test
+
+  verify-web:
+    name: Web typecheck + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webapp
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
