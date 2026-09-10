@@ -17,6 +17,7 @@ Independent Next.js/PWA client for SpotiFLAC. It lives under `webapp/` so the ex
 - Secure server-side download proxy
 - Preview URL fallback when a full stream temporarily cannot be resolved
 - End-to-end health endpoint that reports gateway reachability, provider count and capabilities
+- Provider readiness panel showing each source as ready, disabled, missing configuration, waiting for verification, or failed
 
 ## Development
 
@@ -31,13 +32,16 @@ Open `http://localhost:3000`. Search/stream/download features require the includ
 
 ## Included provider gateway
 
-The repository now includes `go_backend/cmd/web-gateway`. It reuses the same extension manager, metadata search, provider priority/de-duplication and stream resolver used by the mobile backend instead of implementing a second provider stack.
+The repository includes `go_backend/cmd/web-gateway`. It reuses the same extension manager, metadata search, provider priority/de-duplication and stream resolver used by the mobile backend instead of implementing a second provider stack.
 
 See `go_backend/README.web-gateway.md` for direct and Docker deployment. The gateway exposes:
 
 - `GET /health`
+- `GET /providers`
 - `GET /search?q=...`
 - `POST /resolve`
+
+`GET /providers` is intentionally read-only and sanitized. It reports configuration completeness and auth readiness without returning setting values, provider tokens, OAuth state or other credentials. Provider credentials remain encrypted on the gateway host.
 
 ## Vercel deployment
 
@@ -86,10 +90,17 @@ Typical response:
 ## Web API routes
 
 - `GET /api/health` — PWA readiness plus live gateway/provider readiness
+- `GET /api/providers` — sanitized provider inventory used by the readiness panel
 - `GET /api/search?q=...` — validated search adapter
 - `POST /api/resolve` — validated stream-resolution adapter
 - `GET|HEAD /api/stream?...` — same-origin stream proxy with media Range support
 - `GET /api/download?...` — same-origin attachment/download proxy
+
+## Provider configuration and authentication
+
+The browser is not used as a credential store. Required API keys, cookies or provider login state live in the gateway's encrypted persistent data directory. The Web UI reports which source still needs configuration or verification so an operator can complete that setup on the gateway without exposing credentials to every Web user.
+
+Qobuz Web and direct TIDAL streams are supported by the shared compatibility resolver. Amazon legacy streams can require decryption/container conversion, so the provider panel reports that limitation instead of advertising direct playback that may fail.
 
 ## Architecture rule
 
