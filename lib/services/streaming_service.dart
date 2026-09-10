@@ -4,6 +4,70 @@ import 'package:spotiflac_android/services/platform_bridge.dart';
 
 const _hostResolveStreamActionPrefix =
     '__spotiflac_host_resolve_stream_v1__:';
+const _streamMediaSourcePrefix = 'spotiflac-stream-v1:';
+
+class StreamMediaRequest {
+  final String extensionId;
+  final String trackId;
+  final String quality;
+
+  const StreamMediaRequest({
+    required this.extensionId,
+    required this.trackId,
+    this.quality = '',
+  });
+
+  Map<String, dynamic> toMap() => <String, dynamic>{
+    'extension_id': extensionId,
+    'track_id': trackId,
+    if (quality.isNotEmpty) 'quality': quality,
+  };
+
+  static StreamMediaRequest? fromMap(Map<String, dynamic> map) {
+    final extensionId = (map['extension_id'] ?? '').toString().trim();
+    final trackId = (map['track_id'] ?? '').toString().trim();
+    final quality = (map['quality'] ?? '').toString().trim();
+    if (extensionId.isEmpty || trackId.isEmpty) return null;
+    return StreamMediaRequest(
+      extensionId: extensionId,
+      trackId: trackId,
+      quality: quality,
+    );
+  }
+}
+
+String encodeStreamMediaSource(StreamMediaRequest request) {
+  final extensionId = request.extensionId.trim();
+  final trackId = request.trackId.trim();
+  if (extensionId.isEmpty || trackId.isEmpty) {
+    throw const StreamResolutionException(
+      'invalid_stream_request',
+      'A streaming provider and track identifier are required.',
+    );
+  }
+  final payload = jsonEncode(<String, dynamic>{
+    'extension_id': extensionId,
+    'track_id': trackId,
+    if (request.quality.trim().isNotEmpty) 'quality': request.quality.trim(),
+  });
+  return '$_streamMediaSourcePrefix${base64Url.encode(utf8.encode(payload)).replaceAll('=', '')}';
+}
+
+StreamMediaRequest? decodeStreamMediaSource(String source) {
+  if (!source.startsWith(_streamMediaSourcePrefix)) return null;
+  final encoded = source.substring(_streamMediaSourcePrefix.length);
+  if (encoded.isEmpty) return null;
+  try {
+    final raw = utf8.decode(base64Url.decode(base64Url.normalize(encoded)));
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map) return null;
+    return StreamMediaRequest.fromMap(Map<String, dynamic>.from(decoded));
+  } catch (_) {
+    return null;
+  }
+}
+
+bool isStreamMediaSource(String source) => decodeStreamMediaSource(source) != null;
 
 class ResolvedAudioStream {
   final Uri uri;
@@ -101,6 +165,16 @@ class StreamResolutionException implements Exception {
 
 class StreamingService {
   const StreamingService._();
+
+  static Future<ResolvedAudioStream> resolveRequest(
+    StreamMediaRequest request, {
+    Map<String, dynamic>? preparedContext,
+  }) => resolve(
+    extensionId: request.extensionId,
+    trackId: request.trackId,
+    quality: request.quality,
+    preparedContext: preparedContext,
+  );
 
   static Future<ResolvedAudioStream> resolve({
     required String extensionId,
