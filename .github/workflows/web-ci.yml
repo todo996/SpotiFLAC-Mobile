@@ -1,0 +1,43 @@
+name: Web App CI
+
+on:
+  push:
+    branches:
+      - feature/streaming-web-vietnamese
+    paths:
+      - 'webapp/**'
+      - '.github/workflows/web-ci.yml'
+  pull_request:
+    paths:
+      - 'webapp/**'
+      - '.github/workflows/web-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webapp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+
+      - name: Install dependencies
+        run: npm install --package-lock-only && npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Production build
+        run: npm run build

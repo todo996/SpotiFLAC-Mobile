@@ -1,3 +1,5 @@
+import { PwaInstallButton } from "@/components/pwa-install-button";
+
 const quickItems = [
   { title: "Bài hát", caption: "Tìm và phát trực tiếp" },
   { title: "Album", caption: "Xem toàn bộ album" },
@@ -23,10 +25,10 @@ export default function HomePage() {
             <p className="eyebrow">SPOTIFLAC WEB</p>
             <h1>Nghe nhạc theo cách của bạn</h1>
           </div>
-          <button className="install-button" type="button" aria-label="Cài SpotiFLAC PWA">Cài ứng dụng</button>
+          <PwaInstallButton />
         </header>
 
-        <form className="search-card" action="#" onSubmit={undefined}>
+        <form className="search-card" action="/" method="get">
           <label htmlFor="search">Tìm nhạc hoặc dán liên kết</label>
           <div className="search-row">
             <input id="search" name="q" placeholder="Tên bài hát, album, nghệ sĩ hoặc URL…" autoComplete="off" />
