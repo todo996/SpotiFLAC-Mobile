@@ -1,5 +1,5 @@
 <div align="center">
-
+  
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/banner-readme-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="assets/readme/banner-readme-light.png">
