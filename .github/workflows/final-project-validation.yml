@@ -129,12 +129,10 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: "22"
-          cache: npm
-          cache-dependency-path: webapp/package-lock.json
 
       - name: Install Web dependencies
         working-directory: webapp
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Web typecheck
         working-directory: webapp
