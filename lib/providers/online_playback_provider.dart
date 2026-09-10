@@ -29,6 +29,29 @@ class OnlinePlaybackController extends Notifier<OnlinePlaybackState> {
     return (track.source ?? '').trim();
   }
 
+  String _sourceProviderFor(Track track) {
+    final source = (track.source ?? '').trim();
+    if (source.isNotEmpty) return source;
+
+    final id = track.id.trim().toLowerCase();
+    for (final provider in const ['spotify', 'deezer', 'tidal', 'qobuz']) {
+      if (id.startsWith('$provider:')) return provider;
+    }
+
+    // Source-less search rows in the existing core pipeline use Spotify IDs.
+    return 'spotify';
+  }
+
+  String _sourceTrackIdFor(Track track, String sourceProvider) {
+    final id = track.id.trim();
+    final prefix = '${sourceProvider.trim().toLowerCase()}:';
+    if (prefix != ':' && id.toLowerCase().startsWith(prefix)) {
+      final unprefixed = id.substring(prefix.length).trim();
+      if (unprefixed.isNotEmpty) return unprefixed;
+    }
+    return id;
+  }
+
   PlayableMedia _toPlayable(
     Track track, {
     String? providerId,
@@ -42,6 +65,15 @@ class OnlinePlaybackController extends Notifier<OnlinePlaybackState> {
       );
     }
 
+    final sourceProvider = _sourceProviderFor(track);
+    final sourceTrackId = _sourceTrackIdFor(track, sourceProvider);
+    if (sourceTrackId.isEmpty) {
+      throw const StreamResolutionException(
+        'missing_track',
+        'The selected track does not have a usable identifier.',
+      );
+    }
+
     final requestedQuality = (quality ?? ref.read(settingsProvider).audioQuality)
         .trim();
     return PlayableMedia(
@@ -49,8 +81,14 @@ class OnlinePlaybackController extends Notifier<OnlinePlaybackState> {
       source: encodeStreamMediaSource(
         StreamMediaRequest(
           extensionId: provider,
-          trackId: track.id,
+          trackId: sourceTrackId,
           quality: requestedQuality,
+          sourceProviderId: sourceProvider,
+          isrc: (track.isrc ?? '').trim(),
+          trackName: track.name,
+          artistName: track.artistName,
+          durationMs: track.duration > 0 ? track.duration * 1000 : 0,
+          deezerId: (track.deezerId ?? '').trim(),
         ),
       ),
       title: track.name,
