@@ -139,10 +139,13 @@ func (p *extensionProviderWrapper) ResolveStream(
 		context:  ctx,
 		timeout:  extensionResolutionTimeout,
 		invoke: func(vm *goja.Runtime) (goja.Value, error) {
-			if !hasExtensionMethod(vm, "resolveStream") {
-				return goja.Null(), nil
-			}
-			return invokeExtensionMethod(vm, "resolveStream", trackID, quality, options)
+			return invokeCompatibleStreamResolver(
+				vm,
+				p.extension.ID,
+				trackID,
+				quality,
+				options,
+			)
 		},
 	}, func(perf *extensionCallPerf, value goja.Value) (*ExtStreamResult, error) {
 		parseStartedAt := time.Now()
