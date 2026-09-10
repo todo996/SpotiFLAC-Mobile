@@ -1,10 +1,25 @@
 import { normalizeTrack, type ResolvedWebStream, type SearchResponse } from "@/lib/music";
 
+export type WebGatewayStatus =
+  | "not_configured"
+  | "unreachable"
+  | "authentication_required"
+  | "authentication_failed"
+  | "no_providers"
+  | "degraded"
+  | "ready";
+
 export interface WebGatewayHealth {
   configured: boolean;
   reachable: boolean;
   ready: boolean;
   providerCount: number;
+  status: WebGatewayStatus;
+  auth: {
+    required: boolean | null;
+    authenticated: boolean;
+    tokenConfigured: boolean;
+  };
   capabilities: {
     search: boolean;
     resolve: boolean;
@@ -17,9 +32,14 @@ function gatewayBase(): string | null {
   return value ? value.replace(/\/$/, "") : null;
 }
 
+function gatewayToken(): string | null {
+  const value = process.env.SPOTIFLAC_WEB_GATEWAY_TOKEN?.trim();
+  return value || null;
+}
+
 function gatewayHeaders(): HeadersInit {
   const headers: Record<string, string> = { Accept: "application/json" };
-  const token = process.env.SPOTIFLAC_WEB_GATEWAY_TOKEN?.trim();
+  const token = gatewayToken();
   if (token) headers.Authorization = `Bearer ${token}`;
   return headers;
 }
@@ -73,15 +93,35 @@ export function isWebGatewayConfigured(): boolean {
 
 export async function gatewayHealth(): Promise<WebGatewayHealth> {
   const base = gatewayBase();
-  const unavailable = (error?: string): WebGatewayHealth => ({
-    configured: base !== null,
-    reachable: false,
-    ready: false,
-    providerCount: 0,
-    capabilities: { search: false, resolve: false },
-    ...(error ? { error } : {}),
+  const tokenConfigured = gatewayToken() !== null;
+
+  const state = (
+    status: WebGatewayStatus,
+    options: {
+      configured?: boolean;
+      reachable?: boolean;
+      providerCount?: number;
+      authRequired?: boolean | null;
+      authenticated?: boolean;
+      capabilities?: { search: boolean; resolve: boolean };
+      error?: string;
+    } = {},
+  ): WebGatewayHealth => ({
+    configured: options.configured ?? base !== null,
+    reachable: options.reachable ?? false,
+    ready: status === "ready",
+    providerCount: options.providerCount ?? 0,
+    status,
+    auth: {
+      required: options.authRequired ?? null,
+      authenticated: options.authenticated ?? false,
+      tokenConfigured,
+    },
+    capabilities: options.capabilities ?? { search: false, resolve: false },
+    ...(options.error ? { error: options.error } : {}),
   });
-  if (!base) return unavailable();
+
+  if (!base) return state("not_configured", { configured: false });
 
   try {
     const response = await fetch(`${base}/health`, {
@@ -90,8 +130,18 @@ export async function gatewayHealth(): Promise<WebGatewayHealth> {
       signal: AbortSignal.timeout(5_000),
     });
     const payload = (await readJson(response)) as Record<string, unknown> | null;
+
     if (!response.ok) {
-      return unavailable(String(payload?.error ?? `Gateway health check failed (${response.status}).`));
+      const error = String(payload?.error ?? `Gateway health check failed (${response.status}).`);
+      if (response.status === 401) {
+        return state(tokenConfigured ? "authentication_failed" : "authentication_required", {
+          reachable: true,
+          authRequired: true,
+          authenticated: false,
+          error,
+        });
+      }
+      return state("degraded", { reachable: true, error });
     }
 
     const rawCount = Number(payload?.providerCount ?? payload?.provider_count ?? 0);
@@ -103,16 +153,44 @@ export async function gatewayHealth(): Promise<WebGatewayHealth> {
       search: rawCapabilities.search === true,
       resolve: rawCapabilities.resolve === true,
     };
+    const rawAuth = payload?.auth && typeof payload.auth === "object"
+      ? payload.auth as Record<string, unknown>
+      : {};
+    const authRequired = typeof rawAuth.required === "boolean" ? rawAuth.required : null;
+    const authenticated = rawAuth.authenticated !== false;
+    const backendReady = typeof payload?.ready === "boolean" ? payload.ready : providerCount > 0;
+    const ready = backendReady && providerCount > 0 && capabilities.search && capabilities.resolve && authenticated;
 
-    return {
-      configured: true,
+    if (ready) {
+      return state("ready", {
+        reachable: true,
+        providerCount,
+        authRequired,
+        authenticated,
+        capabilities,
+      });
+    }
+    if (providerCount === 0) {
+      return state("no_providers", {
+        reachable: true,
+        providerCount,
+        authRequired,
+        authenticated,
+        capabilities,
+      });
+    }
+    return state("degraded", {
       reachable: true,
-      ready: providerCount > 0 && capabilities.search && capabilities.resolve,
       providerCount,
+      authRequired,
+      authenticated,
       capabilities,
-    };
+      error: "Gateway is reachable but one or more required capabilities are unavailable.",
+    });
   } catch (error) {
-    return unavailable(error instanceof Error ? error.message : "Gateway health check failed.");
+    return state("unreachable", {
+      error: error instanceof Error ? error.message : "Gateway health check failed.",
+    });
   }
 }
 

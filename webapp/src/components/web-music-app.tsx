@@ -8,6 +8,24 @@ const QUEUE_STORAGE_KEY = "spotiflac.web.queue.v1";
 const SETTINGS_STORAGE_KEY = "spotiflac.web.player-settings.v1";
 
 type RepeatMode = "off" | "all" | "one";
+type GatewayStatus =
+  | "not_configured"
+  | "unreachable"
+  | "authentication_required"
+  | "authentication_failed"
+  | "no_providers"
+  | "degraded"
+  | "ready";
+
+type ClientGatewayHealth = {
+  configured: boolean;
+  reachable: boolean;
+  ready: boolean;
+  providerCount: number;
+  status: GatewayStatus;
+  authRequired: boolean | null;
+  authenticated: boolean;
+};
 
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return "00:00";
@@ -15,6 +33,26 @@ function formatTime(seconds: number): string {
   const minutes = Math.floor(whole / 60);
   const remaining = whole % 60;
   return `${String(minutes).padStart(2, "0")}:${String(remaining).padStart(2, "0")}`;
+}
+
+function gatewayStatusLabel(gateway: ClientGatewayHealth | null): string {
+  if (!gateway) return "Đang kiểm tra nguồn nhạc…";
+  switch (gateway.status) {
+    case "not_configured":
+      return "Chưa cấu hình Web gateway";
+    case "unreachable":
+      return "Không kết nối được Web gateway";
+    case "authentication_required":
+      return "Web gateway yêu cầu token xác thực";
+    case "authentication_failed":
+      return "Token Web gateway không hợp lệ";
+    case "no_providers":
+      return "Gateway hoạt động · chưa có nguồn nhạc";
+    case "ready":
+      return `${gateway.providerCount} nguồn nhạc Web đã sẵn sàng${gateway.authRequired ? " · đã xác thực" : ""}`;
+    default:
+      return "Web gateway đang hoạt động nhưng chưa sẵn sàng";
+  }
 }
 
 function queueItem(track: WebTrack): PlayerQueueItem {
@@ -68,7 +106,7 @@ export function WebMusicApp() {
   const [volume, setVolume] = useState(1);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>("off");
   const [shuffle, setShuffle] = useState(false);
-  const [gatewayConfigured, setGatewayConfigured] = useState<boolean | null>(null);
+  const [gatewayHealth, setGatewayHealth] = useState<ClientGatewayHealth | null>(null);
   const [message, setMessage] = useState("Tìm một bài hát để bắt đầu nghe.");
   const [error, setError] = useState<string | null>(null);
 
@@ -119,15 +157,64 @@ export function WebMusicApp() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/health", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((payload: { gatewayConfigured?: unknown }) => {
-        if (!cancelled) setGatewayConfigured(payload.gatewayConfigured === true);
-      })
-      .catch(() => {
-        if (!cancelled) setGatewayConfigured(false);
-      });
-    return () => { cancelled = true; };
+
+    const checkGateway = async () => {
+      try {
+        const response = await fetch("/api/health", { cache: "no-store" });
+        const payload = (await response.json()) as {
+          gatewayConfigured?: unknown;
+          gatewayReachable?: unknown;
+          gatewayReady?: unknown;
+          gatewayStatus?: unknown;
+          gatewayProviderCount?: unknown;
+          gatewayAuth?: unknown;
+        };
+        if (cancelled) return;
+
+        const rawStatus = String(payload.gatewayStatus ?? "degraded");
+        const allowedStatuses = new Set<GatewayStatus>([
+          "not_configured",
+          "unreachable",
+          "authentication_required",
+          "authentication_failed",
+          "no_providers",
+          "degraded",
+          "ready",
+        ]);
+        const auth = payload.gatewayAuth && typeof payload.gatewayAuth === "object"
+          ? payload.gatewayAuth as Record<string, unknown>
+          : {};
+        const rawProviderCount = Number(payload.gatewayProviderCount ?? 0);
+        setGatewayHealth({
+          configured: payload.gatewayConfigured === true,
+          reachable: payload.gatewayReachable === true,
+          ready: payload.gatewayReady === true,
+          providerCount: Number.isFinite(rawProviderCount) && rawProviderCount > 0 ? Math.floor(rawProviderCount) : 0,
+          status: allowedStatuses.has(rawStatus as GatewayStatus) ? rawStatus as GatewayStatus : "degraded",
+          authRequired: typeof auth.required === "boolean" ? auth.required : null,
+          authenticated: auth.authenticated === true,
+        });
+      } catch {
+        if (!cancelled) {
+          setGatewayHealth({
+            configured: false,
+            reachable: false,
+            ready: false,
+            providerCount: 0,
+            status: "unreachable",
+            authRequired: null,
+            authenticated: false,
+          });
+        }
+      }
+    };
+
+    void checkGateway();
+    const interval = window.setInterval(() => void checkGateway(), 30_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
   }, []);
 
   const resolveAndPlay = useCallback(async (item: PlayerQueueItem, index: number) => {
@@ -394,6 +481,11 @@ export function WebMusicApp() {
     event.preventDefault();
     const normalized = query.trim();
     if (!normalized) return;
+    if (!gatewayHealth?.ready) {
+      setError(gatewayStatusLabel(gatewayHealth));
+      setMessage("Nguồn nhạc Web chưa sẵn sàng.");
+      return;
+    }
     setSearching(true);
     setError(null);
     setMessage(`Đang tìm “${normalized}”…`);
@@ -415,11 +507,9 @@ export function WebMusicApp() {
   }
 
   const queueLabel = useMemo(() => queue.length > 0 ? `${queue.length} bài` : "Trống", [queue.length]);
-  const gatewayLabel = gatewayConfigured === null
-    ? "Đang kiểm tra nguồn nhạc…"
-    : gatewayConfigured
-      ? "Nguồn nhạc Web đã sẵn sàng"
-      : "Chưa cấu hình nguồn nhạc Web";
+  const gatewayLabel = gatewayStatusLabel(gatewayHealth);
+  const gatewayReady = gatewayHealth?.ready === true;
+  const gatewayProblem = gatewayHealth !== null && !gatewayReady;
 
   return (
     <main className="app-shell">
@@ -439,7 +529,7 @@ export function WebMusicApp() {
           <div>
             <p className="eyebrow">SPOTIFLAC WEB</p>
             <h1>Nghe nhạc theo cách của bạn</h1>
-            <p className={`gateway-status ${gatewayConfigured ? "ready" : ""}`}>{gatewayLabel}</p>
+            <p className={`gateway-status${gatewayReady ? " ready" : gatewayProblem ? " problem" : ""}`}>{gatewayLabel}</p>
           </div>
           <PwaInstallButton />
         </header>
@@ -448,7 +538,7 @@ export function WebMusicApp() {
           <label htmlFor="search">Tìm nhạc hoặc dán liên kết</label>
           <div className="search-row">
             <input id="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tên bài hát, album, nghệ sĩ hoặc URL…" autoComplete="off" />
-            <button type="submit" disabled={searching}>{searching ? "Đang tìm…" : "Tìm kiếm"}</button>
+            <button type="submit" disabled={searching || gatewayHealth === null || !gatewayReady}>{searching ? "Đang tìm…" : gatewayHealth === null ? "Đang kiểm tra…" : "Tìm kiếm"}</button>
           </div>
           <p>{message}</p>
           {error ? <p className="inline-error" role="alert">{error}</p> : null}
@@ -457,7 +547,7 @@ export function WebMusicApp() {
         <section id="results" aria-labelledby="results-title">
           <div className="section-title">
             <h2 id="results-title">Kết quả</h2>
-            {results.length > 0 ? <button className="text-action" type="button" onClick={() => void playAllResults()}>Phát tất cả</button> : <span>Sẵn sàng trên PC · Tablet · Mobile</span>}
+            {results.length > 0 ? <button className="text-action" type="button" disabled={!gatewayReady} onClick={() => void playAllResults()}>Phát tất cả</button> : <span>Sẵn sàng trên PC · Tablet · Mobile</span>}
           </div>
           <div className="track-results">
             {results.length === 0 ? (
@@ -470,7 +560,7 @@ export function WebMusicApp() {
                   <span>{track.artistName || "Không rõ nghệ sĩ"}{track.albumName ? ` · ${track.albumName}` : ""}</span>
                 </div>
                 <span className="result-quality">{track.quality || (track.durationMs ? formatTime(track.durationMs / 1000) : "Online")}</span>
-                <button className="round-action primary-action" type="button" aria-label={`Phát ${track.name}`} onClick={() => void playTrackNow(track)}>▶</button>
+                <button className="round-action primary-action" type="button" disabled={!gatewayReady} aria-label={`Phát ${track.name}`} onClick={() => void playTrackNow(track)}>▶</button>
                 <button className="round-action" type="button" aria-label={`Thêm ${track.name} vào hàng chờ`} onClick={() => setQueue((items) => [...items, queueItem(track)])}>＋</button>
                 <a className="round-action download-action" aria-label={`Tải ${track.name}`} href={downloadUrl(track)}>↓</a>
               </article>

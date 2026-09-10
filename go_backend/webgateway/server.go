@@ -53,10 +53,22 @@ func (s *Server) authenticate(next http.Handler) http.Handler {
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
+	providerCount := s.backend.ProviderCount()
+	readiness := "ready"
+	if providerCount <= 0 {
+		readiness = "no_providers"
+	}
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"status":        "ok",
 		"configured":    true,
-		"providerCount": s.backend.ProviderCount(),
+		"ready":         providerCount > 0,
+		"readiness":     readiness,
+		"providerCount": providerCount,
+		"auth": map[string]bool{
+			"required":      s.token != "",
+			"authenticated": true,
+		},
 		"capabilities": map[string]bool{
 			"search":  true,
 			"resolve": true,

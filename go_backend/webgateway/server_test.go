@@ -51,8 +51,41 @@ func TestHealthRequiresConfiguredBearerToken(t *testing.T) {
 	if response.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", response.Code)
 	}
-	if !strings.Contains(response.Body.String(), `"providerCount":3`) {
-		t.Fatalf("unexpected health response: %s", response.Body.String())
+
+	var payload struct {
+		Ready         bool   `json:"ready"`
+		Readiness     string `json:"readiness"`
+		ProviderCount int    `json:"providerCount"`
+		Auth          struct {
+			Required      bool `json:"required"`
+			Authenticated bool `json:"authenticated"`
+		} `json:"auth"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &payload); err != nil {
+		t.Fatalf("decode health response: %v", err)
+	}
+	if !payload.Ready || payload.Readiness != "ready" || payload.ProviderCount != 3 {
+		t.Fatalf("unexpected readiness response: %s", response.Body.String())
+	}
+	if !payload.Auth.Required || !payload.Auth.Authenticated {
+		t.Fatalf("unexpected auth response: %s", response.Body.String())
+	}
+}
+
+func TestHealthReportsNoProvidersWithoutExposingCredentials(t *testing.T) {
+	backend := &fakeBackend{providerCount: 0}
+	handler := NewHandler(backend, "")
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/health", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", response.Code)
+	}
+	body := response.Body.String()
+	if !strings.Contains(body, `"readiness":"no_providers"`) || !strings.Contains(body, `"ready":false`) {
+		t.Fatalf("unexpected no-provider health response: %s", body)
+	}
+	if !strings.Contains(body, `"required":false`) || strings.Contains(body, "secret") || strings.Contains(body, "token") {
+		t.Fatalf("health response exposed or misreported auth state: %s", body)
 	}
 }
 
