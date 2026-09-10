@@ -59,7 +59,7 @@
   "trackReplayGainScanning": "Đang phân tích âm lượng...",
   "trackReplayGainSuccess": "Đã thêm thẻ ReplayGain",
   "trackReplayGainFailed": "Không thể thêm thẻ ReplayGain",
-  "selectionReplayGainCount": "ReplayGain ({count})",
+  "selectionReplayGainCount": "Quét ReplayGain ({count})",
   "@selectionReplayGainCount": {
     "placeholders": {
       "count": {
@@ -729,7 +729,7 @@
   "storeLoadError": "Không thể tải kho tiện ích",
   "storeEmptyNoExtensions": "Chưa có tiện ích nào",
   "storeEmptyNoResults": "Không tìm thấy tiện ích",
-  "extensionId": "ID",
+  "extensionId": "ID tiện ích",
   "extensionError": "Lỗi",
   "extensionCapabilities": "Khả năng",
   "extensionMetadataProvider": "Nguồn thông tin bài hát",
@@ -1074,7 +1074,7 @@
   "trackConvertFormat": "Chuyển đổi định dạng",
   "trackConvertTitle": "Chuyển đổi âm thanh",
   "trackConvertTargetFormat": "Định dạng đích",
-  "trackConvertBitrate": "Bitrate",
+  "trackConvertBitrate": "Tốc độ bit",
   "trackConvertKeepOriginal": "Giữ tệp gốc",
   "trackConvertKeepOriginalDescription": "Thêm tệp đã chuyển đổi thành một mục riêng trong thư viện",
   "trackConvertConfirmTitle": "Xác nhận chuyển đổi",
@@ -1430,5 +1430,1340 @@
   "logAutoScrollOn": "Tự cuộn: BẬT",
   "logAutoScrollOff": "Tự cuộn: TẮT",
   "logCopyLogs": "Sao chép nhật ký",
-  "logClearSearch": "Xóa nội dung tìm kiếm"
+  "logClearSearch": "Xóa nội dung tìm kiếm",
+  "a11yDeselectTrack": "Bỏ chọn bài hát",
+  "@a11yDeselectTrack": {
+    "description": "Accessibility label for deselecting a track"
+  },
+  "a11yOpenAlbum": "Mở album {albumName}",
+  "@a11yOpenAlbum": {
+    "description": "Accessibility label for opening an album",
+    "placeholders": {
+      "albumName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yOpenAlbumByArtistTrackCount": "Mở album {albumName} của {artistName}, gồm {trackCount} bài hát",
+  "@a11yOpenAlbumByArtistTrackCount": {
+    "description": "Accessibility label for opening an album item with track count",
+    "placeholders": {
+      "albumName": {
+        "type": "String"
+      },
+      "artistName": {
+        "type": "String"
+      },
+      "trackCount": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yOpenItem": "Mở {itemType} {name}",
+  "@a11yOpenItem": {
+    "description": "Accessibility label for opening a generic item",
+    "placeholders": {
+      "itemType": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yOpenItemCount": "Mở {title}, gồm {count} mục",
+  "@a11yOpenItemCount": {
+    "description": "Accessibility label for opening a grouped item with count",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yOpenTrackByArtist": "Mở bài {trackName} của {artistName}",
+  "@a11yOpenTrackByArtist": {
+    "description": "Accessibility label for opening a track item",
+    "placeholders": {
+      "trackName": {
+        "type": "String"
+      },
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yPlayTrackByArtist": "Phát bài {trackName} của {artistName}",
+  "@a11yPlayTrackByArtist": {
+    "description": "Accessibility label for playing a local library track",
+    "placeholders": {
+      "trackName": {
+        "type": "String"
+      },
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11ySelectAlbum": "Chọn album {albumName}",
+  "@a11ySelectAlbum": {
+    "description": "Accessibility label for selecting an album",
+    "placeholders": {
+      "albumName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11ySelectTrack": "Chọn bài hát",
+  "@a11ySelectTrack": {
+    "description": "Accessibility label for selecting a track"
+  },
+  "a11yTrackByArtist": "{trackName} của {artistName}",
+  "@a11yTrackByArtist": {
+    "description": "Accessibility label for a queue or list track item",
+    "placeholders": {
+      "trackName": {
+        "type": "String"
+      },
+      "artistName": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutPaxsenixSubtitle": "Proxy lời bài hát cho Musixmatch, Netease, Apple Music, QQ Music, Spotify, Deezer, YouTube, Kugou và Genius",
+  "@aboutPaxsenixSubtitle": {
+    "description": "Subtitle for Paxsenix special thanks entry on the about page"
+  },
+  "actionDismiss": "Đóng",
+  "@actionDismiss": {
+    "description": "Generic action - dismiss"
+  },
+  "actionGo": "Đi",
+  "@actionGo": {
+    "description": "Generic action button label"
+  },
+  "actionShuffle": "Phát ngẫu nhiên",
+  "@actionShuffle": {
+    "description": "Tooltip for shuffle playback action"
+  },
+  "announcementUnableToOpenLink": "Không thể mở liên kết. Vui lòng thử lại.",
+  "@announcementUnableToOpenLink": {
+    "description": "Snackbar shown when an announcement CTA link cannot be opened"
+  },
+  "artistReleases": "Các bản phát hành",
+  "@artistReleases": {
+    "description": "Section header for all artist releases"
+  },
+  "audioAnalysisCodec": "Codec âm thanh",
+  "@audioAnalysisCodec": {
+    "description": "Audio codec metric label"
+  },
+  "audioAnalysisContainer": "Định dạng chứa",
+  "@audioAnalysisContainer": {
+    "description": "Audio container metric label"
+  },
+  "audioAnalysisLufs": "Mức LUFS",
+  "@audioAnalysisLufs": {
+    "description": "Integrated loudness metric label"
+  },
+  "audioAnalysisMono": "Âm thanh mono",
+  "@audioAnalysisMono": {
+    "description": "Audio channel layout label - mono"
+  },
+  "audioAnalysisNyquist": "Tần số Nyquist",
+  "@audioAnalysisNyquist": {
+    "description": "Nyquist frequency metric label"
+  },
+  "audioAnalysisPeak": "Mức đỉnh",
+  "@audioAnalysisPeak": {
+    "description": "Peak amplitude metric label"
+  },
+  "audioAnalysisRms": "Mức RMS",
+  "@audioAnalysisRms": {
+    "description": "RMS level metric label"
+  },
+  "audioAnalysisStereo": "Âm thanh stereo",
+  "@audioAnalysisStereo": {
+    "description": "Audio channel layout label - stereo"
+  },
+  "audioAnalysisTruePeak": "Đỉnh thực",
+  "@audioAnalysisTruePeak": {
+    "description": "True peak metric label"
+  },
+  "clickableInformationUnavailable": "Không có thông tin {type}",
+  "@clickableInformationUnavailable": {
+    "description": "Snackbar shown when clickable metadata cannot open a destination",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "clickableLookingUpArtist": "Đang tìm thông tin nghệ sĩ...",
+  "@clickableLookingUpArtist": {
+    "description": "Snackbar shown while clickable artist metadata is being resolved"
+  },
+  "collectionAddedTracksToPlaylist": "Đã thêm {count} bài hát vào {playlistName}",
+  "@collectionAddedTracksToPlaylist": {
+    "description": "Snackbar after adding multiple tracks to a playlist",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlistName": {
+        "type": "String"
+      }
+    }
+  },
+  "collectionAddedTracksToPlaylistWithExisting": "Đã thêm {count} bài hát vào {playlistName} ({alreadyCount} bài đã có trong danh sách)",
+  "@collectionAddedTracksToPlaylistWithExisting": {
+    "description": "Snackbar after adding multiple tracks to a playlist when some were already present",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "playlistName": {
+        "type": "String"
+      },
+      "alreadyCount": {
+        "type": "int"
+      }
+    }
+  },
+  "collectionDeletePlaylistsMessage": "Xóa {count} danh sách phát?",
+  "@collectionDeletePlaylistsMessage": {
+    "description": "Confirmation message for deleting selected playlists",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "collectionPlaylistsDeleted": "Đã xóa {count} danh sách phát",
+  "@collectionPlaylistsDeleted": {
+    "description": "Snackbar after deleting selected playlists",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dialogDisableAndClear": "Tắt và xóa",
+  "@dialogDisableAndClear": {
+    "description": "Confirmation action to disable download history and clear existing entries"
+  },
+  "dialogDisableHistoryMessage": "Lịch sử hiện có sẽ bị xóa. Các tệp nhạc đã tải xuống sẽ không bị xóa.",
+  "@dialogDisableHistoryMessage": {
+    "description": "Confirmation dialog message shown before disabling download history"
+  },
+  "dialogDisableHistoryTitle": "Tắt lịch sử tải xuống?",
+  "@dialogDisableHistoryTitle": {
+    "description": "Confirmation dialog title shown before disabling download history"
+  },
+  "downloadAlbumArtistMetadataFull": "Metadata Nghệ sĩ album: Đầy đủ",
+  "@downloadAlbumArtistMetadataFull": {
+    "description": "Status label when album-artist folder filtering uses full metadata"
+  },
+  "downloadAlbumArtistMetadataPrimaryOnly": "Metadata Nghệ sĩ album: Chỉ nghệ sĩ chính",
+  "@downloadAlbumArtistMetadataPrimaryOnly": {
+    "description": "Status label when album-artist folder filtering uses primary artist only"
+  },
+  "downloadDeduplication": "Bỏ qua bài đã tải",
+  "@downloadDeduplication": {
+    "description": "Setting - skip tracks already in download history"
+  },
+  "downloadDeduplicationDisabled": "Mọi bài hát sẽ được tải xuống bất kể lịch sử",
+  "@downloadDeduplicationDisabled": {
+    "description": "Subtitle when deduplication is off"
+  },
+  "downloadDeduplicationEnabled": "Các bài đã tải trước đó sẽ được bỏ qua",
+  "@downloadDeduplicationEnabled": {
+    "description": "Subtitle when deduplication is on"
+  },
+  "downloadDeduplicationWithQualityVariants": "Tệp đã có ở chất lượng đã chọn sẽ được bỏ qua",
+  "@downloadDeduplicationWithQualityVariants": {
+    "description": "Deduplication subtitle when separate quality versions are allowed"
+  },
+  "downloadFallbackExtensions": "Tiện ích dự phòng",
+  "@downloadFallbackExtensions": {
+    "description": "Settings item for configuring fallback extension providers"
+  },
+  "downloadFallbackExtensionsSubtitle": "Chọn các tiện ích có thể dùng làm nguồn dự phòng",
+  "@downloadFallbackExtensionsSubtitle": {
+    "description": "Subtitle for fallback extensions item"
+  },
+  "downloadNativeWorker": "Trình tải nền gốc",
+  "@downloadNativeWorker": {
+    "description": "Setting title for Android native download worker"
+  },
+  "downloadNativeWorkerSubtitle": "Dịch vụ nền Android cho tải xuống qua tiện ích",
+  "@downloadNativeWorkerSubtitle": {
+    "description": "Setting subtitle for Android native download worker"
+  },
+  "downloadPrimaryArtistOnlyOff": "Chỉ nghệ sĩ chính: Tắt",
+  "@downloadPrimaryArtistOnlyOff": {
+    "description": "Status label when primary-artist-only folder naming is disabled"
+  },
+  "downloadPrimaryArtistOnlyOn": "Chỉ nghệ sĩ chính: Bật",
+  "@downloadPrimaryArtistOnlyOn": {
+    "description": "Status label when primary-artist-only folder naming is enabled"
+  },
+  "downloadQualityVariants": "Cho phép nhiều phiên bản chất lượng",
+  "@downloadQualityVariants": {
+    "description": "Setting to retain multiple quality versions of the same track"
+  },
+  "downloadQualityVariantsDescription": "Giữ mọi phiên bản chất lượng; chỉ thêm chất lượng đo được vào tên tệp khi tên đó đã được dùng",
+  "@downloadQualityVariantsDescription": {
+    "description": "Description for retaining multiple quality versions"
+  },
+  "editMetadataAdvanced": "Nâng cao",
+  "@editMetadataAdvanced": {
+    "description": "Expandable section label for advanced metadata fields"
+  },
+  "editMetadataFieldAlbumTypeHint": "Album, đĩa đơn, EP, tuyển tập...",
+  "@editMetadataFieldAlbumTypeHint": {
+    "description": "Hint for the release type metadata field"
+  },
+  "editMetadataFieldComment": "Ghi chú",
+  "@editMetadataFieldComment": {
+    "description": "Label for comment field in the edit metadata sheet"
+  },
+  "editMetadataFieldComposer": "Nhạc sĩ sáng tác",
+  "@editMetadataFieldComposer": {
+    "description": "Label for composer field in the edit metadata sheet"
+  },
+  "editMetadataFieldDateHint": "YYYY-MM-DD hoặc YYYY",
+  "@editMetadataFieldDateHint": {
+    "description": "Hint text for the edit metadata date field"
+  },
+  "editMetadataFieldDiscTotal": "Tổng số đĩa",
+  "@editMetadataFieldDiscTotal": {
+    "description": "Label for total discs field in the edit metadata sheet"
+  },
+  "editMetadataFieldExplicit": "Nội dung nhạy cảm",
+  "@editMetadataFieldExplicit": {
+    "description": "Label for the explicit content metadata field"
+  },
+  "editMetadataFieldExplicitHint": "Đánh dấu bài hát này có nội dung nhạy cảm",
+  "@editMetadataFieldExplicitHint": {
+    "description": "Description for the explicit content metadata switch"
+  },
+  "editMetadataFieldIsrc": "Mã ISRC",
+  "@editMetadataFieldIsrc": {
+    "description": "Chip label for ISRC field in auto-fill selector"
+  },
+  "editMetadataFieldTrackTotal": "Tổng số bài",
+  "@editMetadataFieldTrackTotal": {
+    "description": "Label for total tracks field in the edit metadata sheet"
+  },
+  "editMetadataFieldUpc": "UPC / Mã vạch",
+  "@editMetadataFieldUpc": {
+    "description": "Label for the release barcode metadata field"
+  },
+  "editMetadataFieldUpcHint": "UPC, EAN hoặc GTIN dạng số",
+  "@editMetadataFieldUpcHint": {
+    "description": "Hint for the release barcode metadata field"
+  },
+  "editMetadataSelectNone": "Bỏ chọn tất cả",
+  "@editMetadataSelectNone": {
+    "description": "Button to clear selected fields for auto-fill"
+  },
+  "errorInvalidFolderSelected": "Thư mục đã chọn không hợp lệ",
+  "@errorInvalidFolderSelected": {
+    "description": "Error when the selected folder is invalid"
+  },
+  "extensionActionFailed": "Thao tác tiện ích thất bại",
+  "@extensionActionFailed": {
+    "description": "Fallback error when an extension action fails without details"
+  },
+  "extensionCustomUrlHandling": "Xử lý URL tùy chỉnh",
+  "@extensionCustomUrlHandling": {
+    "description": "Extension detail section title for custom URL handling"
+  },
+  "extensionCustomUrlHandlingShareHint": "Chia sẻ liên kết từ các trang này tới SpotiFLAC Mobile để tiện ích xử lý.",
+  "@extensionCustomUrlHandlingShareHint": {
+    "description": "Extension detail hint explaining share-to-app URL handling"
+  },
+  "extensionCustomUrlHandlingSubtitle": "Tiện ích này có thể xử lý liên kết từ các trang sau",
+  "@extensionCustomUrlHandlingSubtitle": {
+    "description": "Extension detail subtitle for custom URL handling"
+  },
+  "extensionDetailsInformation": "Thông tin",
+  "@extensionDetailsInformation": {
+    "description": "Section title for extension metadata information"
+  },
+  "extensionDetailsTags": "Thẻ",
+  "@extensionDetailsTags": {
+    "description": "Section title for extension tags"
+  },
+  "extensionEnterValue": "Nhập giá trị",
+  "@extensionEnterValue": {
+    "description": "Hint for editing an extension setting value"
+  },
+  "extensionHealthChecksConfigured": "Đã cấu hình {count} kiểm tra",
+  "@extensionHealthChecksConfigured": {
+    "description": "Extension service health check count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "extensionHealthDegraded": "Hoạt động không ổn định",
+  "@extensionHealthDegraded": {
+    "description": "Extension service health status - degraded"
+  },
+  "extensionHealthNotConfigured": "Chưa cấu hình",
+  "@extensionHealthNotConfigured": {
+    "description": "Extension service health status - not configured"
+  },
+  "extensionHealthOffline": "Ngoại tuyến",
+  "@extensionHealthOffline": {
+    "description": "Extension service health status - offline"
+  },
+  "extensionHealthOnline": "Trực tuyến",
+  "@extensionHealthOnline": {
+    "description": "Extension service health status - online"
+  },
+  "extensionHealthRequired": "bắt buộc",
+  "@extensionHealthRequired": {
+    "description": "Label for a required extension service health check"
+  },
+  "extensionHealthServiceDegraded": "Dịch vụ hoạt động không ổn định",
+  "@extensionHealthServiceDegraded": {
+    "description": "Tooltip for degraded extension service"
+  },
+  "extensionHealthServiceOffline": "Dịch vụ đang ngoại tuyến",
+  "@extensionHealthServiceOffline": {
+    "description": "Tooltip for offline extension service"
+  },
+  "extensionHealthServiceOnline": "Dịch vụ đang trực tuyến",
+  "@extensionHealthServiceOnline": {
+    "description": "Tooltip for online extension service"
+  },
+  "extensionHealthServiceUnknown": "Chưa xác định trạng thái dịch vụ",
+  "@extensionHealthServiceUnknown": {
+    "description": "Tooltip for unknown extension service health"
+  },
+  "extensionHealthUnknown": "Không xác định",
+  "@extensionHealthUnknown": {
+    "description": "Extension service health status - unknown"
+  },
+  "extensionLastChecked": "Kiểm tra lần cuối {time}",
+  "@extensionLastChecked": {
+    "description": "Timestamp for the latest extension service health check",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "extensionOauthConnectHint": "Nhấn Kết nối với Spotify để điền trường này.",
+  "@extensionOauthConnectHint": {
+    "description": "Hint for an OAuth login link field before connecting Spotify"
+  },
+  "extensionRefreshStatus": "Làm mới trạng thái",
+  "@extensionRefreshStatus": {
+    "description": "Tooltip for refreshing extension service health status"
+  },
+  "extensionServiceHealth": "Tình trạng dịch vụ",
+  "@extensionServiceHealth": {
+    "description": "Extension capability label for service health checks"
+  },
+  "extensionServiceStatus": "Trạng thái dịch vụ",
+  "@extensionServiceStatus": {
+    "description": "Extension detail section header for service status"
+  },
+  "extensionSettingNotSet": "Chưa đặt",
+  "@extensionSettingNotSet": {
+    "description": "Value shown when an extension setting has no value"
+  },
+  "extensionSettingsCount": "{count} cài đặt",
+  "@extensionSettingsCount": {
+    "description": "Count of settings exposed by an extension quality option",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "extensionUtilityFunctions": "Chức năng tiện ích",
+  "@extensionUtilityFunctions": {
+    "description": "Capability label for utility-only extensions"
+  },
+  "extensionVerificationBrowserExternal": "Trình duyệt ngoài",
+  "@extensionVerificationBrowserExternal": {
+    "description": "Chip label for external browser verification mode"
+  },
+  "extensionVerificationBrowserInApp": "Trong ứng dụng",
+  "@extensionVerificationBrowserInApp": {
+    "description": "Chip label for in-app browser verification mode"
+  },
+  "extensionVerificationBrowserSubtitleExternal": "Ưu tiên mở bước xác minh bằng trình duyệt mặc định",
+  "@extensionVerificationBrowserSubtitleExternal": {
+    "description": "Subtitle when external browser is preferred for extension verification"
+  },
+  "extensionVerificationBrowserSubtitleInApp": "Ưu tiên mở bước xác minh bằng trình duyệt trong ứng dụng",
+  "@extensionVerificationBrowserSubtitleInApp": {
+    "description": "Subtitle when in-app browser is preferred for extension verification"
+  },
+  "extensionVerificationBrowserTitle": "Trình duyệt xác minh",
+  "@extensionVerificationBrowserTitle": {
+    "description": "Settings option title for extension verification browser preference"
+  },
+  "extensionVerificationClose": "Đóng",
+  "@extensionVerificationClose": {
+    "description": "Button to dismiss the extension verification help dialog"
+  },
+  "extensionVerificationCopyLink": "Sao chép liên kết",
+  "@extensionVerificationCopyLink": {
+    "description": "Button to copy the extension verification URL"
+  },
+  "extensionVerificationHelpMessageManual": "SpotiFLAC Mobile không thể tự mở trình duyệt. Hãy mở liên kết này trong trình duyệt hoặc tự sao chép liên kết.",
+  "@extensionVerificationHelpMessageManual": {
+    "description": "Dialog message when automatic browser launch for verification fails"
+  },
+  "extensionVerificationHelpMessageWaiting": "Nếu trình duyệt không mở, hoặc bạn đã xác minh xong nhưng chưa quay lại SpotiFLAC Mobile, hãy mở lại liên kết này hoặc sao chép thủ công.",
+  "@extensionVerificationHelpMessageWaiting": {
+    "description": "Dialog message when verification may need manual browser help"
+  },
+  "extensionVerificationHelpTitleManual": "Mở xác minh thủ công",
+  "@extensionVerificationHelpTitleManual": {
+    "description": "Dialog title when automatic browser launch for verification fails"
+  },
+  "extensionVerificationHelpTitleWaiting": "Vẫn đang chờ xác minh",
+  "@extensionVerificationHelpTitleWaiting": {
+    "description": "Dialog title when verification is taking longer than expected"
+  },
+  "extensionVerificationLinkCopied": "Đã sao chép liên kết xác minh",
+  "@extensionVerificationLinkCopied": {
+    "description": "Snackbar after copying the extension verification URL"
+  },
+  "extensionVerificationOpenBrowser": "Mở trình duyệt",
+  "@extensionVerificationOpenBrowser": {
+    "description": "Button to open the extension verification URL in a browser"
+  },
+  "extensionVerificationUnavailable": "Không có trang xác minh cho {extension}. Hãy thử tải lại để yêu cầu thử thách xác minh mới.",
+  "@extensionVerificationUnavailable": {
+    "description": "Shown when the app cannot retrieve a pending verification challenge",
+    "placeholders": {
+      "extension": {
+        "type": "String"
+      }
+    }
+  },
+  "itemCount": "{count} mục",
+  "@itemCount": {
+    "description": "Generic item count label",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryBuiltInPlayerInfo": "Trình phát tích hợp dùng để nghe thử nhanh các bài hát cục bộ. Hãy dùng trình phát nhạc bên ngoài để nghe thường xuyên.",
+  "@libraryBuiltInPlayerInfo": {
+    "description": "Info note explaining the built-in player is for previews only"
+  },
+  "libraryBuiltInPreviewPlayer": "Trình nghe thử tích hợp",
+  "@libraryBuiltInPreviewPlayer": {
+    "description": "Setting option to use the built-in preview player"
+  },
+  "libraryBuiltInPreviewPlayerSubtitle": "Chỉ dùng để nghe thử nhanh nhạc cục bộ trong SpotiFLAC Mobile, không khuyến nghị cho việc nghe nhạc thường xuyên",
+  "@libraryBuiltInPreviewPlayerSubtitle": {
+    "description": "Subtitle for built-in preview player option"
+  },
+  "libraryDownloadsHistoryExcluded": "{count} mục từ lịch sử Tải xuống (không hiển thị trong danh sách)",
+  "@libraryDownloadsHistoryExcluded": {
+    "description": "Library count note for downloaded history items excluded from the local list",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryExternalPlayer": "Trình phát bên ngoài",
+  "@libraryExternalPlayer": {
+    "description": "Setting option to use an external music player"
+  },
+  "libraryExternalPlayerSubtitle": "Khuyến nghị để nghe nhạc: chất lượng tốt nhất, phát liền mạch, EQ và hỗ trợ nhiều định dạng hơn",
+  "@libraryExternalPlayerSubtitle": {
+    "description": "Subtitle for external player option"
+  },
+  "libraryFilterMetadataIncorrectIsrcFormat": "Định dạng ISRC không đúng",
+  "@libraryFilterMetadataIncorrectIsrcFormat": {
+    "description": "Filter option - items with an invalid ISRC format"
+  },
+  "libraryFilterMetadataMissingArtist": "Thiếu nghệ sĩ",
+  "@libraryFilterMetadataMissingArtist": {
+    "description": "Filter option - items missing artist"
+  },
+  "libraryFilterMetadataMissingDiscNumber": "Thiếu số đĩa",
+  "@libraryFilterMetadataMissingDiscNumber": {
+    "description": "Filter option - items missing disc number"
+  },
+  "libraryFilterMetadataMissingIsrc": "Thiếu ISRC",
+  "@libraryFilterMetadataMissingIsrc": {
+    "description": "Filter option - items without any ISRC tag"
+  },
+  "libraryFilterMetadataMissingLabel": "Thiếu hãng phát hành",
+  "@libraryFilterMetadataMissingLabel": {
+    "description": "Filter option - items missing record label"
+  },
+  "libraryFilterMetadataMissingLyrics": "Thiếu lời bài hát",
+  "@libraryFilterMetadataMissingLyrics": {
+    "description": "Filter option for tracks without embedded or sidecar lyrics"
+  },
+  "libraryFilterMetadataMissingTrackNumber": "Thiếu số thứ tự bài",
+  "@libraryFilterMetadataMissingTrackNumber": {
+    "description": "Filter option - items missing track number"
+  },
+  "libraryPlayback": "Phát nhạc",
+  "@libraryPlayback": {
+    "description": "Section header for playback settings in library settings"
+  },
+  "libraryScanCancelled": "Đã hủy quét",
+  "@libraryScanCancelled": {
+    "description": "Library scan status when a scan was cancelled"
+  },
+  "libraryScanCancelledSubtitle": "Bạn có thể quét lại khi sẵn sàng.",
+  "@libraryScanCancelledSubtitle": {
+    "description": "Library scan status subtitle after cancellation"
+  },
+  "logAffectedDomains": "Bị ảnh hưởng: {domains}",
+  "@logAffectedDomains": {
+    "description": "Affected domains in log issue analysis",
+    "placeholders": {
+      "domains": {
+        "type": "String"
+      }
+    }
+  },
+  "logIssueIspBlockingDescription": "Nhà mạng của bạn có thể đang chặn truy cập tới các dịch vụ tải xuống",
+  "@logIssueIspBlockingDescription": {
+    "description": "Diagnostic badge description for ISP blocking"
+  },
+  "logIssueIspBlockingLabel": "PHÁT HIỆN NHÀ MẠNG CHẶN",
+  "@logIssueIspBlockingLabel": {
+    "description": "Diagnostic badge label when ISP blocking is detected"
+  },
+  "logIssueIspBlockingSuggestion": "Hãy thử dùng VPN hoặc đổi DNS sang 1.1.1.1 hay 8.8.8.8",
+  "@logIssueIspBlockingSuggestion": {
+    "description": "Diagnostic badge suggestion for ISP blocking"
+  },
+  "logIssueNetworkErrorDescription": "Phát hiện sự cố kết nối",
+  "@logIssueNetworkErrorDescription": {
+    "description": "Diagnostic badge description for generic network errors"
+  },
+  "logIssueNetworkErrorLabel": "LỖI MẠNG",
+  "@logIssueNetworkErrorLabel": {
+    "description": "Diagnostic badge label for generic network errors"
+  },
+  "logIssueNetworkErrorSuggestion": "Kiểm tra kết nối Internet",
+  "@logIssueNetworkErrorSuggestion": {
+    "description": "Diagnostic badge suggestion for generic network errors"
+  },
+  "logIssueRateLimitedDescription": "Đã gửi quá nhiều yêu cầu tới dịch vụ",
+  "@logIssueRateLimitedDescription": {
+    "description": "Diagnostic badge description for rate limiting"
+  },
+  "logIssueRateLimitedLabel": "BỊ GIỚI HẠN YÊU CẦU",
+  "@logIssueRateLimitedLabel": {
+    "description": "Diagnostic badge label when the service rate limits requests"
+  },
+  "logIssueRateLimitedSuggestion": "Chờ vài phút rồi thử lại",
+  "@logIssueRateLimitedSuggestion": {
+    "description": "Diagnostic badge suggestion for rate limiting"
+  },
+  "logIssueSummary": "Tóm tắt sự cố",
+  "@logIssueSummary": {
+    "description": "Header for log issue analysis summary"
+  },
+  "logIssueTrackNotFoundDescription": "Không tìm thấy một số bài hát trên các dịch vụ tải xuống",
+  "@logIssueTrackNotFoundDescription": {
+    "description": "Diagnostic badge description when a track is unavailable"
+  },
+  "logIssueTrackNotFoundLabel": "KHÔNG TÌM THẤY BÀI HÁT",
+  "@logIssueTrackNotFoundLabel": {
+    "description": "Diagnostic badge label when a track is unavailable"
+  },
+  "logIssueTrackNotFoundSuggestion": "Bài hát có thể không có chất lượng lossless",
+  "@logIssueTrackNotFoundSuggestion": {
+    "description": "Diagnostic badge suggestion when a track is unavailable"
+  },
+  "logTotalErrors": "Tổng số lỗi: {count}",
+  "@logTotalErrors": {
+    "description": "Total error count in log issue analysis",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "metadataCopyAll": "Sao chép toàn bộ metadata",
+  "@metadataCopyAll": {
+    "description": "Metadata menu action that copies every visible key and value"
+  },
+  "metadataCopyField": "Sao chép tên trường và giá trị",
+  "@metadataCopyField": {
+    "description": "Metadata menu action that copies the selected key and value"
+  },
+  "metadataCopyValue": "Sao chép giá trị",
+  "@metadataCopyValue": {
+    "description": "Metadata menu action that copies only the selected value"
+  },
+  "metadataExplicitValue": "Có nội dung nhạy cảm",
+  "@metadataExplicitValue": {
+    "description": "Displayed value when a track is marked explicit"
+  },
+  "metadataProvidersSubtitle": "Kéo để sắp xếp thứ tự nguồn tìm kiếm và metadata",
+  "@metadataProvidersSubtitle": {
+    "description": "Subtitle for metadata provider priority item"
+  },
+  "metadataProvidersTitle": "Ưu tiên nguồn metadata",
+  "@metadataProvidersTitle": {
+    "description": "Settings item title for metadata provider order"
+  },
+  "nowPlayingDetails": "Chi tiết",
+  "@nowPlayingDetails": {
+    "description": "Menu item and section title for track metadata details"
+  },
+  "nowPlayingLibraryEmpty": "Thư viện của bạn đang trống",
+  "@nowPlayingLibraryEmpty": {
+    "description": "Snackbar when shuffle library is requested but library has no tracks"
+  },
+  "nowPlayingMinimize": "Thu nhỏ",
+  "@nowPlayingMinimize": {
+    "description": "Tooltip for minimizing the now playing screen"
+  },
+  "nowPlayingNextTrack": "Bài tiếp theo",
+  "@nowPlayingNextTrack": {
+    "description": "Tooltip for the next-track playback control"
+  },
+  "nowPlayingNoLyrics": "Tệp này không có lời bài hát",
+  "@nowPlayingNoLyrics": {
+    "description": "Empty state when the playing file has no embedded lyrics"
+  },
+  "nowPlayingNoMetadata": "Không có metadata",
+  "@nowPlayingNoMetadata": {
+    "description": "Empty state when track metadata cannot be loaded"
+  },
+  "nowPlayingNothingPlaying": "Chưa có bài nào đang phát",
+  "@nowPlayingNothingPlaying": {
+    "description": "Empty state when no track is currently playing"
+  },
+  "nowPlayingOpenInExternalPlayer": "Mở bằng trình phát bên ngoài",
+  "@nowPlayingOpenInExternalPlayer": {
+    "description": "Menu item to open the current track in an external player"
+  },
+  "nowPlayingPlayInOrder": "Phát theo thứ tự",
+  "@nowPlayingPlayInOrder": {
+    "description": "Tooltip when shuffle mode is disabled"
+  },
+  "nowPlayingPreviousTrack": "Bài trước",
+  "@nowPlayingPreviousTrack": {
+    "description": "Tooltip for the previous-track playback control"
+  },
+  "nowPlayingQueueEmpty": "Hàng chờ đang trống",
+  "@nowPlayingQueueEmpty": {
+    "description": "Empty state when the playback queue has no items"
+  },
+  "nowPlayingShuffleLibrary": "Phát ngẫu nhiên thư viện",
+  "@nowPlayingShuffleLibrary": {
+    "description": "Button label to shuffle and play the entire local library"
+  },
+  "nowPlayingShuffleLibraryFailed": "Không thể phát ngẫu nhiên thư viện: {error}",
+  "@nowPlayingShuffleLibraryFailed": {
+    "description": "Snackbar when shuffling the library fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nowPlayingShuffleOn": "Đã bật phát ngẫu nhiên",
+  "@nowPlayingShuffleOn": {
+    "description": "Tooltip when shuffle mode is enabled"
+  },
+  "nowPlayingSleepTimer": "Hẹn giờ tắt nhạc",
+  "@nowPlayingSleepTimer": {
+    "description": "Menu item and sheet title for the playback sleep timer"
+  },
+  "nowPlayingSleepTimerActive": "Kết thúc lúc {time}",
+  "@nowPlayingSleepTimerActive": {
+    "description": "Active sleep timer deadline shown in the player menu",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "nowPlayingSleepTimerCancelled": "Đã tắt hẹn giờ",
+  "@nowPlayingSleepTimerCancelled": {
+    "description": "Confirmation after cancelling the playback sleep timer"
+  },
+  "nowPlayingSleepTimerMinutes": "{minutes} phút",
+  "@nowPlayingSleepTimerMinutes": {
+    "description": "Duration choice for the playback sleep timer",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "nowPlayingSleepTimerOff": "Tắt hẹn giờ",
+  "@nowPlayingSleepTimerOff": {
+    "description": "Action to cancel the active playback sleep timer"
+  },
+  "nowPlayingSleepTimerSet": "Đã đặt hẹn giờ trong {duration}",
+  "@nowPlayingSleepTimerSet": {
+    "description": "Confirmation after setting the playback sleep timer",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "nowPlayingTabLyrics": "Lời bài hát",
+  "@nowPlayingTabLyrics": {
+    "description": "Tab label for the lyrics view"
+  },
+  "nowPlayingTabPlayer": "Trình phát",
+  "@nowPlayingTabPlayer": {
+    "description": "Tab label for the player view"
+  },
+  "nowPlayingTitle": "Đang phát",
+  "@nowPlayingTitle": {
+    "description": "Title for the now playing screen"
+  },
+  "nowPlayingUpNext": "Tiếp theo",
+  "@nowPlayingUpNext": {
+    "description": "Title for the playback queue sheet"
+  },
+  "openInOtherServices": "Mở trên dịch vụ khác",
+  "@openInOtherServices": {
+    "description": "Title and tooltip for finding the current collection in other services"
+  },
+  "optionsEmbeddedCoverSize": "Kích thước ảnh bìa nhúng",
+  "@optionsEmbeddedCoverSize": {
+    "description": "Metadata setting that limits downloaded artwork resolution before it is embedded"
+  },
+  "optionsEmbeddedCoverSizeDescription": "Giảm kích thước ảnh bìa tải từ xa trước khi nhúng. Ảnh đã nằm trong giới hạn sẽ được giữ nguyên.",
+  "@optionsEmbeddedCoverSizeDescription": {
+    "description": "Description shown in the embedded cover size picker"
+  },
+  "optionsEmbeddedCoverSizeOriginal": "Độ phân giải gốc",
+  "@optionsEmbeddedCoverSizeOriginal": {
+    "description": "Option that preserves the provider artwork at its original resolution"
+  },
+  "permissionAudio": "Âm thanh",
+  "@permissionAudio": {
+    "description": "Audio permission type label"
+  },
+  "permissionNotification": "Thông báo",
+  "@permissionNotification": {
+    "description": "Notification permission type label"
+  },
+  "permissionStorage": "Bộ nhớ",
+  "@permissionStorage": {
+    "description": "Storage permission type label"
+  },
+  "queueCheckingDownloadSession": "Đang kiểm tra phiên tải xuống...",
+  "@queueCheckingDownloadSession": {
+    "description": "Queue status while the download provider's session is being checked during preparation (preparationStage 'checking_session'). This is about the provider session, not about locating a finished file."
+  },
+  "queueDownloadSpeedStatus": "Đang tải - {speed} MB/s",
+  "@queueDownloadSpeedStatus": {
+    "description": "Queue status while downloading with speed",
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "queueDownloadStarting": "Đang bắt đầu...",
+  "@queueDownloadStarting": {
+    "description": "Queue status before download progress is available"
+  },
+  "queueResolvingDownloadMetadata": "Đang lấy metadata bài hát...",
+  "queueResolvingDownloadStream": "Đang chuẩn bị luồng âm thanh...",
+  "queueResumingAfterVerification": "Đang tiếp tục sau khi xác minh...",
+  "queueRetryAllFailed": "Thử lại {count} mục lỗi",
+  "@queueRetryAllFailed": {
+    "description": "Button to retry every failed download in the queue",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "queueWaitingForVerification": "Đang chờ xác minh...",
+  "regionCountryAU": "Úc",
+  "@regionCountryAU": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryBR": "Brazil",
+  "@regionCountryBR": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryCA": "Canada",
+  "@regionCountryCA": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryDE": "Đức",
+  "@regionCountryDE": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryFR": "Pháp",
+  "@regionCountryFR": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryGB": "Vương quốc Anh",
+  "@regionCountryGB": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryID": "Indonesia",
+  "@regionCountryID": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryIN": "Ấn Độ",
+  "@regionCountryIN": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryJP": "Nhật Bản",
+  "@regionCountryJP": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryKR": "Hàn Quốc",
+  "@regionCountryKR": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryMX": "Mexico",
+  "@regionCountryMX": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryUS": "Hoa Kỳ",
+  "@regionCountryUS": {
+    "description": "Country name for SongLink region picker"
+  },
+  "regionCountryXK": "Kosovo",
+  "@regionCountryXK": {
+    "description": "Country name for SongLink region picker"
+  },
+  "releaseTypeEp": "EP",
+  "@releaseTypeEp": {
+    "description": "Badge label for EP releases"
+  },
+  "releaseTypeSingle": "Đĩa đơn",
+  "@releaseTypeSingle": {
+    "description": "Badge label for single releases"
+  },
+  "sectionDuplicates": "Bài trùng lặp",
+  "@sectionDuplicates": {
+    "description": "Settings section header for deduplication"
+  },
+  "sectionLyricsProviderOptions": "Tùy chọn nguồn lời bài hát",
+  "@sectionLyricsProviderOptions": {
+    "description": "Settings section header for per-provider lyrics options"
+  },
+  "sectionMetadataProviders": "Nguồn cung cấp",
+  "@sectionMetadataProviders": {
+    "description": "Settings section header for metadata providers"
+  },
+  "selectionBatchConvertConfirmMessageLosslessCapped": "Chuyển đổi {count} bài hát sang {format} ({quality})?\n\nĐầu ra vẫn dùng codec lossless nhưng độ sâu bit/tần số lấy mẫu sẽ bị giới hạn. Tệp gốc sẽ bị xóa sau khi chuyển đổi.",
+  "@selectionBatchConvertConfirmMessageLosslessCapped": {
+    "description": "Confirmation dialog message for capped lossless batch conversion",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "format": {
+        "type": "String"
+      },
+      "quality": {
+        "type": "String"
+      }
+    }
+  },
+  "selectionDeletePlaylistsCount": "Xóa {count} danh sách phát",
+  "@selectionDeletePlaylistsCount": {
+    "description": "Button label for deleting multiple selected playlists",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectionDeleteTracksCount": "Xóa {count} bài hát",
+  "@selectionDeleteTracksCount": {
+    "description": "Button label for deleting selected tracks",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsApp": "Ứng dụng",
+  "@settingsApp": {
+    "description": "Settings menu item - app settings"
+  },
+  "settingsAppSubtitle": "Cập nhật, dữ liệu, kho tiện ích, gỡ lỗi",
+  "@settingsAppSubtitle": {
+    "description": "Subtitle for app settings"
+  },
+  "settingsFiles": "Tệp & thư mục",
+  "@settingsFiles": {
+    "description": "Settings menu item - file and folder settings"
+  },
+  "settingsFilesSubtitle": "Nơi tải xuống, tên tệp, cấu trúc thư mục",
+  "@settingsFilesSubtitle": {
+    "description": "Subtitle for files & folders settings"
+  },
+  "settingsGroupContent": "Nội dung & metadata",
+  "@settingsGroupContent": {
+    "description": "Settings group covering the library, metadata and lyrics"
+  },
+  "settingsGroupDownloads": "Tải xuống & tệp",
+  "@settingsGroupDownloads": {
+    "description": "Settings group covering download behaviour and storage"
+  },
+  "settingsGroupHelp": "Giới thiệu & hỗ trợ",
+  "@settingsGroupHelp": {
+    "description": "Settings group covering the about page and donations"
+  },
+  "settingsGroupInterface": "Tiện ích & giao diện",
+  "@settingsGroupInterface": {
+    "description": "Settings group covering look and feel"
+  },
+  "settingsGroupSystem": "Hệ thống",
+  "@settingsGroupSystem": {
+    "description": "Settings group covering app-level data, cache and logs"
+  },
+  "settingsLyrics": "Lời bài hát",
+  "@settingsLyrics": {
+    "description": "Settings menu item - lyrics settings"
+  },
+  "settingsLyricsSubtitle": "Nhúng lời, chế độ, nguồn và tùy chọn ngôn ngữ",
+  "@settingsLyricsSubtitle": {
+    "description": "Subtitle for lyrics settings"
+  },
+  "settingsMetadata": "Thông tin bài hát",
+  "@settingsMetadata": {
+    "description": "Settings menu item - metadata settings"
+  },
+  "settingsMetadataSubtitle": "Ảnh bìa, thẻ, ReplayGain, nguồn metadata",
+  "@settingsMetadataSubtitle": {
+    "description": "Subtitle for metadata settings"
+  },
+  "settingsSaveDownloadHistory": "Lưu lịch sử tải xuống",
+  "@settingsSaveDownloadHistory": {
+    "description": "Settings switch title for storing completed downloads in history"
+  },
+  "settingsSaveDownloadHistorySubtitle": "Giữ các lượt tải hoàn tất trong lịch sử và thư viện",
+  "@settingsSaveDownloadHistorySubtitle": {
+    "description": "Settings switch subtitle for storing completed downloads in history"
+  },
+  "settingsSearchHint": "Tìm trong cài đặt",
+  "@settingsSearchHint": {
+    "description": "Placeholder of the search field on the Settings tab"
+  },
+  "settingsSearchNoResults": "Không có cài đặt nào khớp với “{query}”",
+  "@settingsSearchNoResults": {
+    "description": "Shown when a Settings search returns nothing",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "setupChangeFolderTooltip": "Đổi thư mục",
+  "@setupChangeFolderTooltip": {
+    "description": "Tooltip for editing the selected download folder"
+  },
+  "shareSheetCopyLink": "Sao chép liên kết",
+  "@shareSheetCopyLink": {
+    "description": "Tooltip for copying a cross-service link"
+  },
+  "shareSheetLinkCopied": "Đã sao chép liên kết {service}",
+  "@shareSheetLinkCopied": {
+    "description": "Snackbar after copying a cross-service link",
+    "placeholders": {
+      "service": {}
+    }
+  },
+  "shareSheetNoExtensions": "Không có dịch vụ tương thích khác",
+  "@shareSheetNoExtensions": {
+    "description": "Empty state when no extensions can be searched for cross-service links"
+  },
+  "shareSheetNotFound": "Không tìm thấy",
+  "@shareSheetNotFound": {
+    "description": "Cross-service share sheet row subtitle when a service has no match"
+  },
+  "snackbarAddedToQueueGeneric": "Đã thêm vào hàng chờ",
+  "@snackbarAddedToQueueGeneric": {
+    "description": "Snackbar when a track is added to the playback queue without naming it"
+  },
+  "snackbarExtensionInstalledEnable": "Đã cài {extensionName}. Hãy bật tiện ích trong Cài đặt > Tiện ích",
+  "@snackbarExtensionInstalledEnable": {
+    "description": "Snackbar after installing an extension from the repo tab",
+    "placeholders": {
+      "extensionName": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarExtensionUpdatedVersion": "Đã cập nhật {extensionName} lên v{version}",
+  "@snackbarExtensionUpdatedVersion": {
+    "description": "Snackbar after updating an extension from the repo tab",
+    "placeholders": {
+      "extensionName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarFailedToInstallNamed": "Không thể cài {extensionName}",
+  "@snackbarFailedToInstallNamed": {
+    "description": "Snackbar when extension install fails in the repo tab",
+    "placeholders": {
+      "extensionName": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarFailedToUpdateNamed": "Không thể cập nhật {extensionName}",
+  "@snackbarFailedToUpdateNamed": {
+    "description": "Snackbar when extension update fails in the repo tab",
+    "placeholders": {
+      "extensionName": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarPlayingNext": "Sẽ phát tiếp theo",
+  "@snackbarPlayingNext": {
+    "description": "Snackbar when a track is inserted as the next queue item"
+  },
+  "storeAnyVersion": "Bất kỳ",
+  "@storeAnyVersion": {
+    "description": "Store detail value when any app version is accepted"
+  },
+  "storeCategoryDownload": "Tải xuống",
+  "@storeCategoryDownload": {
+    "description": "Store extension category - download"
+  },
+  "storeCategoryIntegration": "Tích hợp",
+  "@storeCategoryIntegration": {
+    "description": "Store extension category - integration"
+  },
+  "storeCategoryLyrics": "Lời bài hát",
+  "@storeCategoryLyrics": {
+    "description": "Store extension category - lyrics"
+  },
+  "storeCategoryMetadata": "Metadata nhạc",
+  "@storeCategoryMetadata": {
+    "description": "Store extension category - metadata"
+  },
+  "storeCategoryUtility": "Tiện ích",
+  "@storeCategoryUtility": {
+    "description": "Store extension category - utility"
+  },
+  "storeExtensionsCount": "{count} tiện ích",
+  "@storeExtensionsCount": {
+    "description": "Store extension result count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storeRequiresVersion": "Yêu cầu v{version} trở lên",
+  "@storeRequiresVersion": {
+    "description": "Store compatibility badge for minimum app version",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "trackAddToQueue": "Thêm vào hàng chờ",
+  "@trackAddToQueue": {
+    "description": "Menu action to add a track to the playback queue"
+  },
+  "trackAlbumType": "Loại bản phát hành",
+  "@trackAlbumType": {
+    "description": "Label for an album or release type metadata value"
+  },
+  "trackConvertActionLabelLossless": "{sourceFormat} → {targetFormat} ({quality})",
+  "@trackConvertActionLabelLossless": {
+    "description": "Convert button label for lossless conversion with quality cap",
+    "placeholders": {
+      "sourceFormat": {
+        "type": "String"
+      },
+      "targetFormat": {
+        "type": "String"
+      },
+      "quality": {
+        "type": "String"
+      }
+    }
+  },
+  "trackConvertActionLabelLossy": "{sourceFormat} → {targetFormat} @ {bitrate}",
+  "@trackConvertActionLabelLossy": {
+    "description": "Convert button label for lossy conversion",
+    "placeholders": {
+      "sourceFormat": {
+        "type": "String"
+      },
+      "targetFormat": {
+        "type": "String"
+      },
+      "bitrate": {
+        "type": "String"
+      }
+    }
+  },
+  "trackConvertConfirmMessageLosslessCapped": "Chuyển từ {sourceFormat} sang {targetFormat} ({quality})?\n\nĐầu ra vẫn dùng codec lossless nhưng độ sâu bit/tần số lấy mẫu sẽ bị giới hạn. Tệp gốc sẽ bị xóa sau khi chuyển đổi.",
+  "@trackConvertConfirmMessageLosslessCapped": {
+    "description": "Confirmation dialog message for capped lossless conversion of a single file",
+    "placeholders": {
+      "sourceFormat": {
+        "type": "String"
+      },
+      "targetFormat": {
+        "type": "String"
+      },
+      "quality": {
+        "type": "String"
+      }
+    }
+  },
+  "trackConvertDitherNone": "Không dither",
+  "@trackConvertDitherNone": {
+    "description": "Lossless conversion dither option with no dithering applied"
+  },
+  "trackConvertDitherTriangular": "Dither TPDF",
+  "@trackConvertDitherTriangular": {
+    "description": "Lossless conversion triangular probability density function dither option"
+  },
+  "trackConvertDitherTriangularHp": "Dither tam giác thông cao",
+  "@trackConvertDitherTriangularHp": {
+    "description": "Lossless conversion high-pass triangular dither option"
+  },
+  "trackConvertDithering": "Tùy chọn dither",
+  "@trackConvertDithering": {
+    "description": "Section label for lossless conversion dithering options"
+  },
+  "trackConvertLosslessOutputWithCap": "Đầu ra lossless giới hạn ở {quality}",
+  "@trackConvertLosslessOutputWithCap": {
+    "description": "Hint shown when lossless conversion will cap bit depth or sample rate",
+    "placeholders": {
+      "quality": {
+        "type": "String"
+      }
+    }
+  },
+  "trackConvertLosslessSuffix": "Không mất dữ liệu",
+  "@trackConvertLosslessSuffix": {
+    "description": "Suffix used in converted lossless quality labels"
+  },
+  "trackConvertOriginal": "Giữ nguyên",
+  "@trackConvertOriginal": {
+    "description": "Label for keeping original bit depth or sample rate during conversion"
+  },
+  "trackConvertOriginalQuality": "Chất lượng gốc",
+  "@trackConvertOriginalQuality": {
+    "description": "Label when no bit depth or sample rate cap is applied during lossless conversion"
+  },
+  "trackConvertResampler": "Bộ lấy mẫu lại",
+  "@trackConvertResampler": {
+    "description": "Section label for lossless conversion resampler options"
+  },
+  "trackConvertResamplerSoxr": "Bộ lấy mẫu lại SoXr",
+  "@trackConvertResamplerSoxr": {
+    "description": "Lossless conversion SoX resampler option"
+  },
+  "trackConvertResamplerSwr": "Bộ lấy mẫu lại SWR",
+  "@trackConvertResamplerSwr": {
+    "description": "Lossless conversion default FFmpeg swresample resampler option"
+  },
+  "trackCoverOnline": "Ảnh bìa trực tuyến",
+  "@trackCoverOnline": {
+    "description": "Label shown when metadata autofill downloaded cover art from the internet"
+  },
+  "trackLyricsEmbeddedSource": "Được nhúng trong tệp",
+  "@trackLyricsEmbeddedSource": {
+    "description": "Lyrics source label for embedded lyrics"
+  },
+  "trackOpenInService": "Mở trong {serviceName}",
+  "@trackOpenInService": {
+    "description": "Button label to open a track in a named music service",
+    "placeholders": {
+      "serviceName": {
+        "type": "String"
+      }
+    }
+  },
+  "trackOptionCopyArtist": "Sao chép tên nghệ sĩ",
+  "@trackOptionCopyArtist": {
+    "description": "Track menu action that copies the artist name"
+  },
+  "trackOptionCopyTrackAndArtist": "Sao chép tên bài và nghệ sĩ",
+  "@trackOptionCopyTrackAndArtist": {
+    "description": "Track menu action that copies the track title and artist"
+  },
+  "trackOptionCopyTrackName": "Sao chép tên bài hát",
+  "@trackOptionCopyTrackName": {
+    "description": "Track menu action that copies the track title"
+  },
+  "trackOptionDownloadQualityVariant": "Tải thêm chất lượng khác",
+  "@trackOptionDownloadQualityVariant": {
+    "description": "Track menu action to download another quality version"
+  },
+  "trackPlayNext": "Phát tiếp theo",
+  "@trackPlayNext": {
+    "description": "Menu action to play a track as the next queue item"
+  },
+  "trackReEnrichSuccessWithFailures": "Đã cập nhật metadata ({successCount}/{total}) - Lỗi: {failedCount}",
+  "@trackReEnrichSuccessWithFailures": {
+    "description": "Snackbar summary after batch metadata re-enrichment finishes with failures",
+    "placeholders": {
+      "successCount": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "failedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "Album không xác định",
+  "@unknownAlbum": {
+    "description": "Fallback album name when metadata is missing"
+  },
+  "unknownArtist": "Nghệ sĩ không xác định",
+  "@unknownArtist": {
+    "description": "Fallback artist name when metadata is missing"
+  },
+  "unknownTitle": "Tên bài không xác định",
+  "@unknownTitle": {
+    "description": "Fallback track title when metadata is missing"
+  },
+  "updateSeeReleaseNotes": "Xem ghi chú phát hành để biết chi tiết.",
+  "@updateSeeReleaseNotes": {
+    "description": "Fallback changelog text when release notes cannot be parsed"
+  },
+  "@extensionId": {
+    "description": "Extension detail - unique ID"
+  },
+  "@trackConvertBitrate": {
+    "description": "Label for bitrate selection"
+  }
 }
