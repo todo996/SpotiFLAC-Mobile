@@ -91,5 +91,81 @@
   "replayGainUnsupportedDecoder": "Không thể phân tích một số bài vì codec âm thanh không được bộ giải mã ReplayGain hỗ trợ. Các tệp đó không bị thay đổi.",
   "optionsArtistTagMode": "Cách ghi tên nghệ sĩ",
   "optionsArtistTagModeDescription": "Chọn cách ghi nhiều nghệ sĩ vào thẻ thông tin của tệp nhạc.",
-  "optionsArtistTagModeJoined": "Gộp thành một giá trị"
+  "optionsArtistTagModeJoined": "Gộp thành một giá trị",
+  "optionsArtistTagModeJoinedSubtitle": "Ghi một giá trị ARTIST như \"Nghệ sĩ A, Nghệ sĩ B\" để tương thích tốt nhất với các trình phát.",
+  "optionsArtistTagModeSplitVorbis": "Tách thẻ cho FLAC/Opus",
+  "optionsArtistTagModeSplitVorbisSubtitle": "Với FLAC và Opus, ghi riêng một thẻ cho từng nghệ sĩ; MP3 và M4A vẫn được gộp.",
+  "optionsExtensionStore": "Kho tiện ích",
+  "optionsExtensionStoreSubtitle": "Hiển thị tab Kho tiện ích trên thanh điều hướng",
+  "optionsCheckUpdates": "Kiểm tra bản cập nhật",
+  "optionsCheckUpdatesSubtitle": "Thông báo khi có phiên bản mới",
+  "optionsUpdateChannel": "Kênh cập nhật",
+  "optionsUpdateChannelStable": "Chỉ bản ổn định",
+  "optionsUpdateChannelPreview": "Nhận bản thử nghiệm",
+  "optionsUpdateChannelWarning": "Bản thử nghiệm có thể còn lỗi hoặc có tính năng chưa hoàn chỉnh",
+  "optionsClearHistory": "Xóa lịch sử tải xuống",
+  "optionsClearHistorySubtitle": "Xóa toàn bộ bài đã tải khỏi lịch sử",
+  "optionsDetailedLogging": "Nhật ký gỡ lỗi chi tiết",
+  "optionsDetailedLoggingOn": "Đang ghi nhật ký chi tiết",
+  "optionsDetailedLoggingOff": "Bật khi cần gửi báo cáo lỗi",
+  "extensionsTitle": "Tiện ích",
+  "extensionsDisabled": "Đã tắt",
+  "extensionsVersion": "Phiên bản {version}",
+  "@extensionsVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "extensionsUninstall": "Gỡ cài đặt",
+  "storeTitle": "Kho tiện ích",
+  "storeSearch": "Tìm tiện ích...",
+  "storeInstall": "Cài đặt",
+  "storeInstalled": "Đã cài",
+  "storeUpdate": "Cập nhật",
+  "aboutTitle": "Giới thiệu",
+  "aboutContributors": "Đóng góp",
+  "aboutMobileDeveloper": "Nhà phát triển phiên bản di động",
+  "aboutOriginalCreator": "Tác giả SpotiFLAC gốc",
+  "aboutLogoArtist": "Nghệ sĩ tài năng đã thiết kế logo đẹp mắt cho ứng dụng!",
+  "aboutTranslators": "Biên dịch",
+  "aboutSpecialThanks": "Lời cảm ơn đặc biệt",
+  "aboutLinks": "Liên kết",
+  "aboutMobileSource": "Mã nguồn bản di động",
+  "aboutPCSource": "Mã nguồn bản PC",
+  "aboutKeepAndroidOpen": "Keep Android Open",
+  "aboutReportIssue": "Báo lỗi",
+  "aboutReportIssueSubtitle": "Báo cáo vấn đề bạn gặp phải",
+  "aboutFeatureRequest": "Đề xuất tính năng",
+  "aboutFeatureRequestSubtitle": "Đề xuất tính năng mới cho ứng dụng",
+  "aboutTelegramChannel": "Kênh Telegram",
+  "aboutTelegramChannelSubtitle": "Thông báo và cập nhật mới",
+  "aboutTelegramChat": "Cộng đồng Telegram",
+  "aboutTelegramChatSubtitle": "Trò chuyện với những người dùng khác",
+  "aboutSocial": "Mạng xã hội",
+  "aboutApp": "Ứng dụng",
+  "aboutVersion": "Phiên bản",
+  "aboutBinimumDesc": "Tác giả QQDL và HiFi API. Dự án này đã góp phần định hình khả năng tải nhạc lossless.",
+  "aboutSachinsenalDesc": "Tác giả dự án HiFi ban đầu, một nền tảng quan trọng cho việc tích hợp các nguồn nhạc lossless.",
+  "aboutUnituneDesc": "Trình phân giải liên kết nhạc mã nguồn mở của Flaze, được dùng để đối chiếu dự phòng giữa nhiều nền tảng.",
+  "aboutMusicBrainzDesc": "Cơ sở dữ liệu âm nhạc mở do MetaBrainz và cộng đồng duy trì, được dùng để đối chiếu các bản thu.",
+  "aboutSquiglyDesc": "Dịch vụ liên kết nhạc đa nền tảng của Liam Macmillan, được dùng làm phương án phân giải dự phòng cuối cùng.",
+  "aboutAppDescription": "Tìm thông tin âm nhạc, quản lý tiện ích và sắp xếp thư viện của bạn.",
+  "artistAlbums": "Album",
+  "artistSingles": "Đĩa đơn & EP",
+  "artistCompilations": "Tuyển tập",
+  "artistPopular": "Phổ biến",
+  "artistMonthlyListeners": "{count} người nghe hằng tháng",
+  "@artistMonthlyListeners": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "trackMetadataService": "Nguồn",
+  "trackMetadataPlay": "Phát",
+  "trackMetadataShare": "Chia sẻ",
+  "trackMetadataDelete": "Xóa"
 }
