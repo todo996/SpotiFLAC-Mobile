@@ -74,8 +74,8 @@ class OnlinePlaybackController extends Notifier<OnlinePlaybackState> {
       );
     }
 
-    final requestedQuality = (quality ?? ref.read(settingsProvider).audioQuality)
-        .trim();
+    final requestedQuality =
+        (quality ?? ref.read(settingsProvider).audioQuality).trim();
     return PlayableMedia(
       id: 'stream:$provider:${track.id}',
       source: encodeStreamMediaSource(
@@ -129,11 +129,8 @@ class OnlinePlaybackController extends Notifier<OnlinePlaybackState> {
     if (tracks.isEmpty) return;
     final items = tracks
         .map(
-          (track) => _toPlayable(
-            track,
-            providerId: providerId,
-            quality: quality,
-          ),
+          (track) =>
+              _toPlayable(track, providerId: providerId, quality: quality),
         )
         .toList(growable: false);
     final handler = await ref
