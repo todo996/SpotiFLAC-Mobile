@@ -535,6 +535,7 @@ extension _ArtistScreenSections on _ArtistScreenState {
                     ],
                   ),
                 ),
+                OnlinePlayButton(track: track),
                 TrackCollectionQuickActions(
                   track: track,
                   hasLocalPlaybackCandidate: isInHistory || isInLocalLibrary,
