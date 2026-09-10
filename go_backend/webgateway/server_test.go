@@ -10,16 +10,18 @@ import (
 )
 
 type fakeBackend struct {
-	searchPayload  json.RawMessage
-	resolvePayload json.RawMessage
-	searchErr      error
-	resolveErr     error
-	providerCount  int
-	lastQuery      string
-	lastLimit      int
-	lastProvider   string
-	lastTrack      string
-	lastQuality    string
+	searchPayload   json.RawMessage
+	resolvePayload  json.RawMessage
+	providerPayload json.RawMessage
+	searchErr       error
+	resolveErr      error
+	providerErr     error
+	providerCount   int
+	lastQuery       string
+	lastLimit       int
+	lastProvider    string
+	lastTrack       string
+	lastQuality     string
 }
 
 func (f *fakeBackend) Search(query string, limit int) (json.RawMessage, error) {
@@ -30,6 +32,10 @@ func (f *fakeBackend) Search(query string, limit int) (json.RawMessage, error) {
 func (f *fakeBackend) ResolveStream(providerID, trackID, quality string, _ map[string]any) (json.RawMessage, error) {
 	f.lastProvider, f.lastTrack, f.lastQuality = providerID, trackID, quality
 	return f.resolvePayload, f.resolveErr
+}
+
+func (f *fakeBackend) Providers() (json.RawMessage, error) {
+	return f.providerPayload, f.providerErr
 }
 
 func (f *fakeBackend) ProviderCount() int { return f.providerCount }
@@ -60,6 +66,9 @@ func TestHealthRequiresConfiguredBearerToken(t *testing.T) {
 			Required      bool `json:"required"`
 			Authenticated bool `json:"authenticated"`
 		} `json:"auth"`
+		Capabilities struct {
+			Providers bool `json:"providers"`
+		} `json:"capabilities"`
 	}
 	if err := json.Unmarshal(response.Body.Bytes(), &payload); err != nil {
 		t.Fatalf("decode health response: %v", err)
@@ -67,8 +76,8 @@ func TestHealthRequiresConfiguredBearerToken(t *testing.T) {
 	if !payload.Ready || payload.Readiness != "ready" || payload.ProviderCount != 3 {
 		t.Fatalf("unexpected readiness response: %s", response.Body.String())
 	}
-	if !payload.Auth.Required || !payload.Auth.Authenticated {
-		t.Fatalf("unexpected auth response: %s", response.Body.String())
+	if !payload.Auth.Required || !payload.Auth.Authenticated || !payload.Capabilities.Providers {
+		t.Fatalf("unexpected auth/capability response: %s", response.Body.String())
 	}
 }
 
@@ -86,6 +95,23 @@ func TestHealthReportsNoProvidersWithoutExposingCredentials(t *testing.T) {
 	}
 	if !strings.Contains(body, `"required":false`) || strings.Contains(body, "secret") || strings.Contains(body, "token") {
 		t.Fatalf("health response exposed or misreported auth state: %s", body)
+	}
+}
+
+func TestProvidersReturnsSanitizedInventoryPayload(t *testing.T) {
+	backend := &fakeBackend{providerPayload: json.RawMessage(`{"providers":[{"id":"qobuz-web","displayName":"Qobuz Web","status":"ready","configuration":{"settings":[{"key":"token","secret":true,"configured":true}]}}],"count":1}`)}
+	handler := NewHandler(backend, "")
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/providers", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", response.Code, response.Body.String())
+	}
+	body := response.Body.String()
+	if !strings.Contains(body, `"qobuz-web"`) || !strings.Contains(body, `"configured":true`) {
+		t.Fatalf("unexpected provider response: %s", body)
+	}
+	if strings.Contains(body, "access_token") || strings.Contains(body, "refresh_token") || strings.Contains(body, "secret-value") {
+		t.Fatalf("provider response exposed credentials: %s", body)
 	}
 }
 
@@ -132,5 +158,13 @@ func TestBackendErrorsBecomeBadGateway(t *testing.T) {
 	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/search?q=test", nil))
 	if response.Code != http.StatusBadGateway {
 		t.Fatalf("expected 502, got %d", response.Code)
+	}
+
+	providerBackend := &fakeBackend{providerErr: errors.New("inventory unavailable")}
+	providerHandler := NewHandler(providerBackend, "")
+	providerResponse := httptest.NewRecorder()
+	providerHandler.ServeHTTP(providerResponse, httptest.NewRequest(http.MethodGet, "/providers", nil))
+	if providerResponse.Code != http.StatusBadGateway {
+		t.Fatalf("expected 502 for provider inventory, got %d", providerResponse.Code)
 	}
 }
