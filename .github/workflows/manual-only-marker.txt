@@ -1,1 +1,0 @@
-Feature development workflows on feature/streaming-web-vietnamese are intentionally manual-only to conserve GitHub Actions quota. Final validation is run from a temporary CI branch when explicitly requested.
