@@ -20,32 +20,84 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: feature/streaming-web-vietnamese
-      - name: Report remaining translations
+      - name: Verify Vietnamese translation completeness
         run: |
           python - <<'PY'
           import json
+          import re
           from pathlib import Path
 
           root = Path('lib/l10n/arb')
           en = json.loads((root / 'app_en.arb').read_text(encoding='utf-8'))
           vi = json.loads((root / 'app_vi.arb').read_text(encoding='utf-8'))
-          remaining = []
-          translated = 0
-          total = 0
-          for key, value in en.items():
-              if key.startswith('@'):
-                  continue
-              total += 1
-              vi_value = vi.get(key)
-              if vi_value != value:
-                  translated += 1
-              else:
-                  remaining.append((key, value))
-          coverage = round(translated * 100 / total, 2) if total else 100
-          print(f'Total: {total}')
-          print(f'Translated: {translated}')
-          print(f'Coverage: {coverage}%')
-          print(f'Remaining: {len(remaining)}')
-          for key, value in remaining:
-              print(f'REMAINING\t{key}\t{json.dumps(value, ensure_ascii=False)}')
+
+          # These values are intentionally identical in natural Vietnamese:
+          # product/proper names, established technical terms, identifiers,
+          # unit-only templates and URL examples.
+          allowed_invariants = {
+              'downloadUrlHint',
+              'appName',
+              'keepAndroidOpen',
+              'bitrate',
+              'updateProgress',
+              'unknownId',
+              'extensionRepoId',
+              'trackAlbum',
+              'searchAlbums',
+              'cueSplitAlbum',
+              'logViewerFileSizeValue',
+              'keepAndroidOpenSubtitle',
+          }
+
+          english_keys = {k for k in en if not k.startswith('@')}
+          vietnamese_keys = {k for k in vi if not k.startswith('@')}
+          missing_keys = sorted(english_keys - vietnamese_keys)
+          extra_keys = sorted(vietnamese_keys - english_keys)
+          unexpected_english = sorted(
+              key for key in english_keys
+              if vi.get(key) == en[key] and key not in allowed_invariants
+          )
+          stale_allowlist = sorted(
+              key for key in allowed_invariants
+              if key not in english_keys or vi.get(key) != en.get(key)
+          )
+
+          placeholder_errors = []
+          for key in sorted(english_keys & vietnamese_keys):
+              metadata = en.get('@' + key)
+              placeholders = set()
+              if isinstance(metadata, dict):
+                  declared = metadata.get('placeholders', {})
+                  if isinstance(declared, dict):
+                      placeholders = set(declared)
+              for placeholder in placeholders:
+                  token = '{' + placeholder
+                  if token not in str(vi[key]):
+                      placeholder_errors.append(f'{key}: missing {{{placeholder}}}')
+
+          translated = sum(1 for key in english_keys if vi.get(key) != en[key])
+          effective_complete = len(english_keys) - len(missing_keys) - len(unexpected_english)
+          print(f'Total user-facing keys: {len(english_keys)}')
+          print(f'Values different from English: {translated}/{len(english_keys)} ({translated * 100 / len(english_keys):.2f}%)')
+          print(f'Allowed language-neutral invariants: {len(allowed_invariants)}')
+          print(f'Effective Vietnamese completion: {effective_complete}/{len(english_keys)}')
+
+          problems = []
+          if missing_keys:
+              problems.append('Missing keys: ' + ', '.join(missing_keys))
+          if extra_keys:
+              problems.append('Unexpected extra keys: ' + ', '.join(extra_keys))
+          if unexpected_english:
+              problems.append('Untranslated English values: ' + ', '.join(unexpected_english))
+          if stale_allowlist:
+              problems.append('Stale invariant allowlist entries: ' + ', '.join(stale_allowlist))
+          if placeholder_errors:
+              problems.append('Placeholder errors: ' + '; '.join(placeholder_errors))
+
+          if problems:
+              for problem in problems:
+                  print('ERROR:', problem)
+              raise SystemExit(1)
+
+          print('Vietnamese user-facing translation is complete; all identical English values are approved invariants.')
           PY
