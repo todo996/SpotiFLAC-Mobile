@@ -1,0 +1,235 @@
+name: Apply Vietnamese Batch 2
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/streaming-web-vietnamese
+    paths:
+      - ".github/workflows/apply-vietnamese-batch-2.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: feature/streaming-web-vietnamese
+
+      - name: Merge natural Vietnamese translations
+        run: |
+          python3 - <<'PY'
+          import json, re
+          from pathlib import Path
+
+          path = Path('lib/l10n/arb/app_vi.arb')
+          base_path = Path('lib/l10n/arb/app_en.arb')
+          vi = json.loads(path.read_text(encoding='utf-8'))
+          base = json.loads(base_path.read_text(encoding='utf-8'))
+          translations = {
+            'extensionHooksAvailable': 'Có {count} hook khả dụng',
+            'extensionPatternsCount': '{count} mẫu',
+            'extensionStrategy': 'Chiến lược: {strategy}',
+            'extensionsProviderPrioritySection': 'Ưu tiên nguồn',
+            'extensionsInstalledSection': 'Tiện ích đã cài',
+            'extensionsNoExtensions': 'Chưa cài tiện ích nào',
+            'extensionsNoExtensionsSubtitle': 'Cài tệp .spotiflac-ext để thêm nguồn mới',
+            'extensionsInstallButton': 'Cài tiện ích',
+            'extensionsInfoTip': 'Tiện ích có thể bổ sung nguồn metadata và nguồn tải xuống. Chỉ cài tiện ích từ nguồn bạn tin cậy.',
+            'extensionsInstalledSuccess': 'Đã cài tiện ích',
+            'extensionsInstalledCount': 'Đã cài thành công {count} tiện ích',
+            'extensionsInstallPartialSuccess': 'Đã cài {installed}/{attempted} tiện ích',
+            'extensionsDownloadPriority': 'Ưu tiên tải xuống',
+            'extensionsDownloadPrioritySubtitle': 'Sắp xếp thứ tự nguồn tải xuống',
+            'extensionsFallbackTitle': 'Nguồn dự phòng',
+            'extensionsFallbackSubtitle': 'Chọn tiện ích tải xuống được phép dùng làm nguồn dự phòng',
+            'extensionsNoDownloadProvider': 'Không có tiện ích nào hỗ trợ tải xuống',
+            'extensionsMetadataPriority': 'Ưu tiên metadata',
+            'extensionsMetadataPrioritySubtitle': 'Sắp xếp thứ tự nguồn tìm kiếm và metadata',
+            'extensionsNoMetadataProvider': 'Không có tiện ích nào cung cấp metadata',
+            'extensionsSearchProvider': 'Nguồn tìm kiếm',
+            'extensionsNoCustomSearch': 'Không có tiện ích nào hỗ trợ tìm kiếm riêng',
+            'extensionsSearchProviderDescription': 'Chọn nguồn dùng để tìm bài hát',
+            'extensionsCustomSearch': 'Tìm kiếm tùy chỉnh',
+            'extensionsErrorLoading': 'Không thể tải tiện ích',
+            'qualityFlacLossless': 'FLAC không mất dữ liệu',
+            'qualityFlacLosslessSubtitle': '16-bit / 44,1 kHz',
+            'qualityHiResFlac': 'FLAC Hi-Res',
+            'qualityHiResFlacSubtitle': '24-bit / tối đa 96 kHz',
+            'qualityHiResFlacMax': 'FLAC Hi-Res tối đa',
+            'qualityHiResFlacMaxSubtitle': '24-bit / tối đa 192 kHz',
+            'downloadLossy320': 'Nén mất dữ liệu 320 kbps',
+            'downloadLossyFormat': 'Định dạng nén mất dữ liệu',
+            'downloadAutoConvert': 'Tự chuyển đổi sau khi tải',
+            'downloadAutoConvertSubtitle': 'Chuyển tệp đã tải sang định dạng nén nhỏ hơn. Tệp gốc chỉ bị thay thế sau khi chuyển đổi thành công.',
+            'downloadAutoConvertFormat': 'Định dạng đầu ra',
+            'downloadAutoConvertFormatSubtitle': 'Chọn định dạng nén dùng cho các lượt tải mới hoàn tất.',
+            'downloadAutoConvertBitrate': 'Chất lượng đầu ra',
+            'downloadAutoConvertBitrateSubtitle': 'Bitrate cao giữ được nhiều chi tiết hơn nhưng tệp sẽ lớn hơn.',
+            'downloadAutoConvertMp3Subtitle': 'Tương thích tốt nhất với nhiều trình phát và thiết bị',
+            'downloadAutoConvertM4aSubtitle': 'Âm thanh AAC hiệu quả trong container M4A',
+            'downloadAutoConvertOpusSubtitle': 'Hiệu quả nhất với các trình phát hiện đại',
+            'downloadLossy320Format': 'Định dạng 320 kbps',
+            'downloadLossy320FormatDesc': 'Chọn định dạng đầu ra cho nhạc nén 320 kbps. Luồng gốc sẽ được chuyển sang định dạng bạn chọn khi cần.',
+            'downloadLossyMp3': 'MP3 320 kbps',
+            'downloadLossyMp3Subtitle': 'Tương thích tốt nhất, khoảng 10 MB mỗi bài',
+            'downloadLossyAac': 'AAC/M4A 320 kbps',
+            'downloadLossyAacSubtitle': 'Tương thích tốt trên di động, container M4A',
+            'downloadLossyOpus256': 'Opus 256 kbps',
+            'downloadLossyOpus256Subtitle': 'Chất lượng Opus cao nhất, khoảng 8 MB mỗi bài',
+            'downloadLossyOpus128': 'Opus 128 kbps',
+            'downloadLossyOpus128Subtitle': 'Dung lượng nhỏ nhất, khoảng 4 MB mỗi bài',
+            'downloadAskBeforeDownload': 'Hỏi trước khi tải',
+            'downloadDirectory': 'Thư mục tải xuống',
+            'downloadSeparateSinglesFolder': 'Thư mục riêng cho đĩa đơn',
+            'downloadAlbumFolderStructure': 'Cấu trúc thư mục album',
+            'albumFolderStructureDescription': 'Chọn cách sắp xếp thư mục album',
+            'downloadUseAlbumArtistForFolders': 'Dùng nghệ sĩ album cho tên thư mục',
+            'downloadUsePrimaryArtistOnly': 'Chỉ dùng nghệ sĩ chính cho tên thư mục',
+            'downloadUsePrimaryArtistOnlyEnabled': 'Bỏ nghệ sĩ góp mặt khỏi tên thư mục (ví dụ: Justin Bieber, Quavo → Justin Bieber)',
+            'downloadUsePrimaryArtistOnlyDisabled': 'Dùng đầy đủ tên nghệ sĩ cho tên thư mục',
+            'downloadSelectQuality': 'Chọn chất lượng',
+            'downloadFrom': 'Tải từ',
+            'appearanceAmoledDark': 'Tối AMOLED',
+            'appearanceAmoledDarkSubtitle': 'Nền đen thuần',
+            'appearanceHeroAnimations': 'Hiệu ứng chuyển ảnh bìa',
+            'appearanceHeroAnimationsSubtitle': 'Tạo hiệu ứng ảnh bìa bay giữa các màn hình, ví dụ khi mở trình phát',
+            'appearanceForceBlur': 'Luôn dùng hiệu ứng làm mờ',
+            'appearanceForceBlurSubtitle': 'Bật làm mờ thanh điều hướng kể cả trên thiết bị mặc định tắt hiệu ứng này. Có thể ảnh hưởng hiệu năng.',
+            'queueClearAll': 'Xóa tất cả',
+            'queueClearAllMessage': 'Bạn có chắc muốn xóa toàn bộ lượt tải không?',
+            'settingsAutoExportFailed': 'Tự xuất các lượt tải lỗi',
+            'settingsAutoExportFailedSubtitle': 'Tự động lưu các lượt tải thất bại vào tệp TXT',
+            'settingsDownloadNetwork': 'Mạng dùng để tải',
+            'settingsDownloadNetworkAny': 'Wi-Fi + dữ liệu di động',
+            'settingsDownloadNetworkWifiOnly': 'Chỉ Wi-Fi',
+            'settingsDownloadNetworkSubtitle': 'Chọn loại mạng được phép dùng để tải. Nếu chọn Chỉ Wi-Fi, các lượt tải sẽ tạm dừng khi dùng dữ liệu di động.',
+            'settingsConcurrentDownloads': 'Tải đồng thời',
+            'settingsConcurrentDownloadsSubtitle': 'Tải nhiều bài cùng lúc sẽ nhanh hơn, nhưng một số nguồn có thể giới hạn các yêu cầu song song.',
+            'concurrentDownloadsOne': 'Mỗi lần 1 bài',
+            'concurrentDownloadsCount': 'Tối đa {count} bài cùng lúc',
+            'albumFolderArtistAlbum': 'Nghệ sĩ / Album',
+            'albumFolderArtistAlbumSubtitle': 'Albums/Tên nghệ sĩ/Tên album/',
+            'albumFolderArtistYearAlbum': 'Nghệ sĩ / [Năm] Album',
+            'albumFolderArtistYearAlbumSubtitle': 'Albums/Tên nghệ sĩ/[2005] Tên album/',
+            'albumFolderAlbumOnly': 'Chỉ album',
+            'albumFolderAlbumOnlySubtitle': 'Albums/Tên album/',
+            'albumFolderYearAlbum': '[Năm] Album',
+            'albumFolderYearAlbumSubtitle': 'Albums/[2005] Tên album/',
+            'albumFolderArtistAlbumSingles': 'Nghệ sĩ / Album + Đĩa đơn',
+            'albumFolderArtistAlbumSinglesSubtitle': 'Nghệ sĩ/Album/ và Nghệ sĩ/Singles/',
+            'albumFolderArtistAlbumFlat': 'Nghệ sĩ / Album (đĩa đơn không tạo thư mục)',
+            'albumFolderArtistAlbumFlatSubtitle': 'Nghệ sĩ/Album/ và Nghệ sĩ/baihat.flac',
+            'downloadedAlbumDeleteSelected': 'Xóa mục đã chọn',
+            'downloadedAlbumDeleteMessage': 'Xóa {count} bài hát khỏi album này?\n\nCác tệp tương ứng cũng sẽ bị xóa khỏi bộ nhớ.',
+            'downloadedAlbumSelectedCount': 'Đã chọn {count}',
+            'downloadedAlbumTapToSelect': 'Chạm vào bài hát để chọn',
+            'downloadedAlbumDeleteCount': 'Xóa {count} bài hát',
+            'downloadedAlbumSelectToDelete': 'Chọn bài hát cần xóa',
+            'downloadedAlbumDiscHeader': 'Đĩa {discNumber}',
+            'recentTypeArtist': 'Nghệ sĩ',
+            'recentTypeAlbum': 'Album',
+            'recentTypeSong': 'Bài hát',
+            'recentTypePlaylist': 'Danh sách phát',
+            'recentEmpty': 'Chưa có hoạt động gần đây',
+            'recentClearAllMessage': 'Xóa toàn bộ hoạt động gần đây? Lịch sử tải xuống và các tệp nhạc sẽ không bị xóa.',
+            'recentShowAllDownloads': 'Xem tất cả lượt tải',
+            'recentPlaylistInfo': 'Danh sách phát: {name}',
+            'discographyDownload': 'Tải danh mục phát hành',
+            'discographyDownloadAll': 'Tải tất cả',
+            'discographyDownloadAllSubtitle': '{count} bài từ {albumCount} bản phát hành',
+            'discographyAlbumsOnly': 'Chỉ album',
+            'discographyAlbumsOnlySubtitle': '{count} bài từ {albumCount} album',
+            'discographySinglesOnly': 'Chỉ đĩa đơn & EP',
+            'discographySinglesOnlySubtitle': '{count} bài từ {albumCount} đĩa đơn',
+            'discographySelectAlbums': 'Chọn album...',
+            'discographySelectAlbumsSubtitle': 'Chọn album hoặc đĩa đơn cụ thể',
+            'discographyFetchingTracks': 'Đang lấy danh sách bài hát...',
+            'discographyFetchingAlbum': 'Đang lấy {current}/{total}...',
+            'discographySelectedCount': 'Đã chọn {count}',
+            'discographyDownloadSelected': 'Tải mục đã chọn',
+            'discographyAddedToQueue': 'Đã thêm {count} bài vào hàng chờ',
+            'discographySkippedDownloaded': 'Đã thêm {added}, bỏ qua {skipped} bài đã tải',
+            'discographyNoAlbums': 'Không có album khả dụng',
+            'discographyFailedToFetch': 'Không thể tải thông tin một số album',
+            'sectionStorageAccess': 'Quyền truy cập bộ nhớ',
+            'allFilesAccess': 'Truy cập tất cả tệp',
+            'allFilesAccessEnabledSubtitle': 'Có thể ghi vào mọi thư mục',
+            'allFilesAccessDisabledSubtitle': 'Chỉ được truy cập các thư mục media',
+            'allFilesAccessDescription': 'Bật tùy chọn này nếu gặp lỗi ghi khi lưu vào thư mục tùy chỉnh. Android 13 trở lên mặc định hạn chế quyền truy cập một số thư mục.',
+            'allFilesAccessDeniedMessage': 'Quyền đã bị từ chối. Hãy bật thủ công “Truy cập tất cả tệp” trong cài đặt hệ thống.',
+            'allFilesAccessDisabledMessage': 'Đã tắt quyền truy cập tất cả tệp. Ứng dụng sẽ dùng quyền bộ nhớ giới hạn.',
+            'settingsLocalLibrary': 'Thư viện cục bộ',
+            'settingsLocalLibrarySubtitle': 'Quét nhạc và phát hiện bản trùng',
+            'settingsCache': 'Bộ nhớ & bộ nhớ đệm',
+            'settingsCacheSubtitle': 'Xem dung lượng và xóa dữ liệu đệm',
+            'libraryTitle': 'Thư viện cục bộ',
+            'libraryScanSettings': 'Cài đặt quét',
+            'libraryEnableLocalLibrary': 'Bật thư viện cục bộ',
+            'libraryEnableLocalLibrarySubtitle': 'Quét và theo dõi nhạc có sẵn trên thiết bị',
+            'libraryFolder': 'Thư mục thư viện',
+            'libraryFolderHint': 'Chạm để chọn thư mục',
+            'libraryAddFolder': 'Thêm thư mục thư viện',
+            'libraryAddFolderSubtitle': 'Bộ nhớ trong, thẻ SD, SSD hoặc ổ lưu trữ ngoài khác',
+            'librarySourceOnline': 'Đang kết nối',
+            'librarySourceOffline': 'Ngoại tuyến. Kết nối lại thiết bị lưu trữ để khôi phục các bài hát này',
+            'librarySourceDisabled': 'Đã tắt',
+            'librarySourceScanCount': 'Đã quét {scanned}/{total} tệp ({progress}%)',
+            'libraryExternalStorage': 'Bộ nhớ ngoài',
+            'libraryRemoveFolder': 'Xóa thư mục khỏi thư viện',
+            'libraryRemoveFolderMessage': 'Xóa thư mục này và các bài đã lập chỉ mục khỏi SpotiFLAC Mobile? Các tệp nhạc trên bộ nhớ sẽ không bị xóa.',
+            'libraryShowDuplicateIndicator': 'Hiện dấu hiệu bản trùng',
+            'libraryShowDuplicateIndicatorSubtitle': 'Hiển thị khi tìm thấy bài đã tồn tại',
+            'libraryAutoScan': 'Tự động quét',
+            'libraryAutoScanSubtitle': 'Tự động quét thư viện để tìm tệp mới',
+            'libraryAutoScanOff': 'Tắt',
+            'libraryAutoScanOnOpen': 'Mỗi khi mở ứng dụng',
+            'libraryAutoScanDaily': 'Hằng ngày',
+            'libraryAutoScanWeekly': 'Hằng tuần',
+            'libraryActions': 'Thao tác',
+            'libraryScan': 'Quét thư viện',
+            'libraryScanSubtitle': 'Quét tìm tệp âm thanh',
+            'libraryScanSelectFolderFirst': 'Hãy chọn thư mục trước',
+            'libraryCleanupMissingFiles': 'Dọn các tệp bị thiếu',
+            'libraryCleanupMissingFilesSubtitle': 'Xóa các mục có tệp không còn tồn tại',
+            'libraryClear': 'Xóa dữ liệu thư viện',
+            'libraryClearSubtitle': 'Xóa toàn bộ bài đã quét khỏi thư viện',
+            'libraryClearConfirmTitle': 'Xóa dữ liệu thư viện',
+            'libraryClearConfirmMessage': 'Toàn bộ bài đã quét sẽ bị xóa khỏi thư viện. Các tệp nhạc thật trên thiết bị sẽ không bị xóa.',
+            'libraryAbout': 'Giới thiệu thư viện cục bộ',
+            'libraryAboutDescription': 'Quét bộ sưu tập nhạc có sẵn để phát hiện bản trùng khi tải xuống. Hỗ trợ FLAC, ALAC, M4A, MP3, Opus, OGG, WAV, AIFF và APE. Metadata sẽ được đọc từ thẻ của tệp khi có.',
+            'libraryTracksUnit': '{count} bài hát',
+            'libraryFilesUnit': '{count} tệp',
+          }
+
+          unknown = sorted(set(translations) - set(base))
+          if unknown:
+              raise SystemExit(f'Unknown translation keys: {unknown}')
+
+          placeholder = re.compile(r'\{([A-Za-z_][A-Za-z0-9_]*)')
+          for key, value in translations.items():
+              expected = set(placeholder.findall(str(base[key])))
+              actual = set(placeholder.findall(value))
+              if expected != actual:
+                  raise SystemExit(f'Placeholder mismatch for {key}: {expected} != {actual}')
+
+          vi.update(translations)
+          path.write_text(json.dumps(vi, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(f'Applied {len(translations)} Vietnamese translations')
+          PY
+
+      - name: Validate JSON
+        run: python3 -m json.tool lib/l10n/arb/app_vi.arb >/dev/null
+
+      - name: Commit Vietnamese batch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/l10n/arb/app_vi.arb
+          git diff --cached --quiet && exit 0
+          git commit -m "feat(l10n): expand Vietnamese library and download UI"
+          git push origin HEAD:feature/streaming-web-vietnamese
