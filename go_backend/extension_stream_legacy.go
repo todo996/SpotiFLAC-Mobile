@@ -58,7 +58,8 @@ func invokeLegacyQobuzStreamResolver(vm *goja.Runtime, trackID, quality string) 
 		), nil
 	}
 
-	directURL := gojaObjectString(vm, value, "directURL", "url")
+	object := value.ToObject(vm)
+	directURL := strings.TrimSpace(gojaObjectString(object, "directURL", "url"))
 	if directURL == "" {
 		return legacyStreamFailure(
 			vm,
@@ -100,8 +101,9 @@ func invokeLegacyTidalStreamResolver(vm *goja.Runtime, trackID, quality string) 
 		), nil
 	}
 
-	kind := strings.ToLower(gojaObjectString(vm, value, "kind"))
-	directURL := gojaObjectString(vm, value, "directURL", "url")
+	object := value.ToObject(vm)
+	kind := strings.ToLower(strings.TrimSpace(gojaObjectString(object, "kind")))
+	directURL := strings.TrimSpace(gojaObjectString(object, "directURL", "url"))
 	if kind != "direct" || directURL == "" {
 		return legacyStreamFailure(
 			vm,
@@ -114,7 +116,7 @@ func invokeLegacyTidalStreamResolver(vm *goja.Runtime, trackID, quality string) 
 	if err != nil {
 		return nil, err
 	}
-	contentType := gojaObjectString(vm, value, "manifestMimeType", "mimeType", "contentType")
+	contentType := strings.TrimSpace(gojaObjectString(object, "manifestMimeType", "mimeType", "contentType"))
 	if contentType == "" {
 		contentType = inferLegacyStreamContentType(directURL)
 	}
@@ -144,24 +146,6 @@ func legacyUserAgentHeaders(vm *goja.Runtime, args ...any) (map[string]string, e
 		return nil, fmt.Errorf("legacy stream resolver returned an invalid User-Agent")
 	}
 	return map[string]string{"User-Agent": userAgent}, nil
-}
-
-func gojaObjectString(vm *goja.Runtime, value goja.Value, keys ...string) string {
-	if gojaValueIsEmpty(value) {
-		return ""
-	}
-	object := value.ToObject(vm)
-	for _, key := range keys {
-		field := object.Get(key)
-		if gojaValueIsEmpty(field) {
-			continue
-		}
-		text := strings.TrimSpace(field.String())
-		if text != "" {
-			return text
-		}
-	}
-	return ""
 }
 
 func legacyStreamFailure(vm *goja.Runtime, errorType, message string) goja.Value {
