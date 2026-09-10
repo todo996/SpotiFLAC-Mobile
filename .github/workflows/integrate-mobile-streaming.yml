@@ -2,15 +2,20 @@ name: Verify Mobile Streaming
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/streaming-web-vietnamese
 
 permissions:
   contents: read
 
 jobs:
-  verify:
-    name: Verify streaming changes
+  go:
+    name: Go streaming validation
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: go_backend
     steps:
       - name: Checkout repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -21,17 +26,21 @@ jobs:
           go-version-file: go_backend/go.mod
           cache-dependency-path: go_backend/go.sum
 
-      - name: Check Go formatting
-        working-directory: go_backend
-        run: test -z "$(gofmt -l .)"
+      - name: Check streaming Go formatting
+        run: test -z "$(gofmt -l extension_stream.go extension_stream_test.go extension_stream_legacy.go extension_stream_legacy_test.go extension_host_action.go extension_host_action_test.go)"
 
       - name: Go vet
-        working-directory: go_backend
         run: go vet ./...
 
-      - name: Go tests
-        working-directory: go_backend
-        run: go test ./...
+      - name: Focused streaming and host tests
+        run: go test ./... -run 'Stream|Host'
+
+  flutter:
+    name: Flutter analyze and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
 
       - name: Setup Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
@@ -43,8 +52,38 @@ jobs:
       - name: Get Flutter dependencies
         run: flutter pub get
 
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Check changed Dart formatting
+        run: dart format --output=none --set-exit-if-changed lib/services/streaming_service.dart lib/providers/online_playback_provider.dart lib/models/track.dart test/streaming_service_test.dart test/track_backend_identity_test.dart
+
       - name: Flutter analyze
         run: flutter analyze
 
       - name: Flutter tests
         run: flutter test
+
+  web:
+    name: Web typecheck and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webapp
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --package-lock-only && npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Production build
+        run: npm run build
