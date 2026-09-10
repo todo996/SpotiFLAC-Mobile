@@ -1,0 +1,62 @@
+name: Apply Streaming Bridge Patch
+
+on:
+  push:
+    branches:
+      - feature/streaming-web-vietnamese
+    paths:
+      - '.github/workflows/apply-streaming-bridge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: feature/streaming-web-vietnamese
+          fetch-depth: 0
+
+      - name: Add reserved host action dispatch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('go_backend/extension_manager.go')
+          text = path.read_text()
+          signature = 'func (m *extensionManager) InvokeAction(extensionID string, actionName string) (map[string]any, error) {\n'
+          insertion = '''func (m *extensionManager) InvokeAction(extensionID string, actionName string) (map[string]any, error) {
+          \tif result, handled, err := invokeReservedHostAction(extensionID, actionName); handled {
+          \t\treturn result, err
+          \t}
+          '''
+          if insertion in text:
+              raise SystemExit(0)
+          if signature not in text:
+              raise SystemExit('InvokeAction signature not found; refusing to patch')
+          text = text.replace(signature, insertion, 1)
+          path.write_text(text)
+          PY
+          gofmt -w go_backend/extension_manager.go go_backend/extension_stream.go go_backend/extension_stream_test.go go_backend/extension_host_action.go go_backend/extension_host_action_test.go
+
+      - name: Test Go backend
+        working-directory: go_backend
+        run: |
+          go test ./...
+          go vet ./...
+
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then
+            echo 'No patch required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add go_backend/extension_manager.go go_backend/extension_stream.go go_backend/extension_stream_test.go go_backend/extension_host_action.go go_backend/extension_host_action_test.go
+          git commit -m 'feat(streaming): wire stream resolver through existing host action bridge'
+          git push origin HEAD:feature/streaming-web-vietnamese
