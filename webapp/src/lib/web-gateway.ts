@@ -22,6 +22,41 @@ async function readJson(response: Response): Promise<unknown> {
   }
 }
 
+function normalizeStreamHeaders(value: unknown): Readonly<Record<string, string>> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  const result: Record<string, string> = {};
+  const blocked = new Set([
+    "connection",
+    "content-length",
+    "host",
+    "keep-alive",
+    "proxy-authenticate",
+    "proxy-authorization",
+    "te",
+    "trailer",
+    "transfer-encoding",
+    "upgrade",
+  ]);
+
+  for (const [rawKey, rawValue] of Object.entries(value as Record<string, unknown>)) {
+    const key = rawKey.trim();
+    const headerValue = String(rawValue ?? "");
+    const lower = key.toLowerCase();
+    if (!key || blocked.has(lower)) continue;
+    if (key.includes("\r") || key.includes("\n") || headerValue.includes("\r") || headerValue.includes("\n")) {
+      throw new Error("Resolver returned an invalid stream request header.");
+    }
+    // Keep the surface bounded even if a misconfigured gateway returns a very
+    // large object. Normal provider auth/header sets are only a handful of keys.
+    if (Object.keys(result).length >= 32 || key.length > 128 || headerValue.length > 8_192) {
+      throw new Error("Resolver returned an oversized stream request header set.");
+    }
+    result[key] = headerValue;
+  }
+  return Object.freeze(result);
+}
+
 export function isWebGatewayConfigured(): boolean {
   return gatewayBase() !== null;
 }
@@ -85,11 +120,18 @@ export async function gatewayResolveStream(input: {
   if (!parsed || (parsed.protocol !== "https:" && parsed.protocol !== "http:")) {
     throw new Error("Resolver returned an invalid stream URL.");
   }
+
   return {
     url,
-    contentType: typeof payload?.content_type === "string" ? payload.content_type : undefined,
-    expiresAtMs: Number.isFinite(Number(payload?.expires_at_ms))
-      ? Number(payload?.expires_at_ms)
+    headers: normalizeStreamHeaders(payload?.headers),
+    contentType:
+      typeof payload?.content_type === "string"
+        ? payload.content_type
+        : typeof payload?.contentType === "string"
+          ? payload.contentType
+          : undefined,
+    expiresAtMs: Number.isFinite(Number(payload?.expires_at_ms ?? payload?.expiresAtMs))
+      ? Number(payload?.expires_at_ms ?? payload?.expiresAtMs)
       : undefined,
     provider: typeof payload?.provider === "string" ? payload.provider : undefined,
     quality: typeof payload?.quality === "string" ? payload.quality : undefined,
