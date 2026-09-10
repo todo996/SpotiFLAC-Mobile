@@ -1,0 +1,67 @@
+name: Vietnamese Final Audit
+
+on:
+  push:
+    branches:
+      - feature/streaming-web-vietnamese
+    paths:
+      - lib/l10n/arb/app_vi.arb
+      - lib/l10n/arb/app_en.arb
+      - .github/workflows/vi-final-audit.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/streaming-web-vietnamese
+      - name: Build remaining translation report
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('lib/l10n/arb')
+          en = json.loads((root / 'app_en.arb').read_text(encoding='utf-8'))
+          vi = json.loads((root / 'app_vi.arb').read_text(encoding='utf-8'))
+          remaining = []
+          translated = 0
+          total = 0
+          for key, value in en.items():
+              if key.startswith('@'):
+                  continue
+              total += 1
+              vi_value = vi.get(key)
+              if vi_value != value:
+                  translated += 1
+              else:
+                  remaining.append({'key': key, 'en': value})
+          report = {
+              'total': total,
+              'translated': translated,
+              'coverage_percent': round(translated * 100 / total, 2) if total else 100,
+              'remaining_count': len(remaining),
+              'remaining': remaining,
+          }
+          Path('tool/vi_remaining_report.json').write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps({k: report[k] for k in ('total','translated','coverage_percent','remaining_count')}, ensure_ascii=False))
+          PY
+      - name: Commit audit report
+        run: |
+          if git diff --quiet -- tool/vi_remaining_report.json && git ls-files --error-unmatch tool/vi_remaining_report.json >/dev/null 2>&1; then
+            echo "Report unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tool/vi_remaining_report.json
+          git commit -m "chore(l10n): refresh Vietnamese remaining report"
+          git push origin HEAD:feature/streaming-web-vietnamese
