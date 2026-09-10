@@ -17,6 +17,7 @@
 		<string>nl</string>
 		<string>pt</string>
 		<string>ru</string>
+		<string>vi</string>
 		<string>zh</string>
 		<string>zh-Hans</string>
 		<string>zh-Hant</string>
@@ -68,6 +69,10 @@
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
+		<!-- Required only for the loopback audio proxy used when a provider
+		     requires authenticated request headers. External HTTP remains blocked. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 	</dict>
 	
 	<!-- File Sharing - Allow access via Files app -->
