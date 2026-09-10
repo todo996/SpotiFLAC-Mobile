@@ -1,1 +1,0 @@
-All feature-development workflows for `feature/streaming-web-vietnamese` are intended to use `workflow_dispatch` only. Do not add `push` or `pull_request` triggers while feature development is in progress.
