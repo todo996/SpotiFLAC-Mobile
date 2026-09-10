@@ -1,0 +1,41 @@
+name: Report Vietnamese Coverage
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/streaming-web-vietnamese
+    paths:
+      - ".github/workflows/report-vietnamese.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+
+      - name: Report Vietnamese coverage and missing strings
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          base = json.loads(Path('lib/l10n/arb/app_en.arb').read_text(encoding='utf-8'))
+          vi = json.loads(Path('lib/l10n/arb/app_vi.arb').read_text(encoding='utf-8'))
+          keys = [k for k in base if not k.startswith('@')]
+          translated = [k for k in keys if k in vi and str(vi[k]).strip() and vi[k] != base[k]]
+          missing = [k for k in keys if k not in vi or not str(vi[k]).strip() or vi[k] == base[k]]
+          pct = (len(translated) / len(keys) * 100) if keys else 100.0
+          print(f'TOTAL={len(keys)}')
+          print(f'TRANSLATED={len(translated)}')
+          print(f'MISSING={len(missing)}')
+          print(f'COVERAGE={pct:.2f}%')
+          print('--- FIRST 180 MISSING ---')
+          for key in missing[:180]:
+              value = str(base[key]).replace('\n', '\\n')
+              print(json.dumps({'key': key, 'en': value}, ensure_ascii=False))
+          PY
