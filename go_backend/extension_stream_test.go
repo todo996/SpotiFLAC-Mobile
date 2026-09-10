@@ -42,7 +42,7 @@ func TestParseExtensionStreamResultValueRejectsUnsafeURLAndHeader(t *testing.T) 
 	vm := goja.New()
 	for _, source := range []string{
 		`({success:true,url:"file:///tmp/song.flac"})`,
-		`({success:true,url:"https://cdn.example.com/song.flac",headers:{"X-Test":"ok\\r\\nInjected: yes"}})`,
+		`({success:true,url:"https://cdn.example.com/song.flac",headers:{"X-Test":"ok\r\nInjected: yes"}})`,
 	} {
 		value, err := vm.RunString(source)
 		if err != nil {
