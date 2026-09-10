@@ -26,7 +26,9 @@ jobs:
           path: target
 
       - name: Apply additive streaming patch
-        run: python3 ci-src/tools/apply_mobile_streaming_patch.py target
+        run: |
+          python3 ci-src/tools/apply_mobile_streaming_patch.py target
+          sed -i 's/StreamingProxyService.instance.release(pendingProxyToken!);/StreamingProxyService.instance.release(pendingProxyToken);/g' target/lib/services/music_player_service.dart
 
       - name: Setup Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
