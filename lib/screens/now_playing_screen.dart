@@ -11,6 +11,7 @@ import 'package:spotiflac_android/screens/downloaded_album_screen.dart';
 import 'package:spotiflac_android/screens/local_album_screen.dart';
 import 'package:spotiflac_android/services/library_database.dart';
 import 'package:spotiflac_android/services/music_player_service.dart';
+import 'package:spotiflac_android/services/streaming_service.dart';
 import 'package:spotiflac_android/utils/clickable_metadata.dart';
 import 'package:spotiflac_android/utils/file_access.dart';
 import 'package:spotiflac_android/utils/int_utils.dart';
@@ -247,6 +248,20 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     final sameItem =
         source == _loadedSource &&
         effectiveResolvedSource == _loadedResolvedSource;
+
+    if (isStreamMediaSource(source)) {
+      _loadedSource = source;
+      _loadedResolvedSource = effectiveResolvedSource;
+      _loadedMetadataPath = null;
+      if (mounted) {
+        setState(() {
+          _loadingMeta = false;
+          _metadata = fallbackMetadata.isEmpty ? null : fallbackMetadata;
+          _lyrics = ParsedLyrics.empty;
+        });
+      }
+      return;
+    }
 
     if (sameItem) {
       if (_metadata == null && fallbackMetadata.isNotEmpty) {
@@ -648,9 +663,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
               const SizedBox(height: 6),
               Text(
                 mediaItem.artist ?? '',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -686,9 +700,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
             const SizedBox(height: 12),
             Text(
               context.l10n.nowPlayingNoLyrics,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -705,10 +718,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       child: Text(
         _lyrics.plainText,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          height: 1.6,
-          color: colorScheme.onSurface,
-        ),
+        style: Theme.of(context).textTheme.titleMedium
+            ?.copyWith(height: 1.6, color: colorScheme.onSurface),
         textAlign: TextAlign.center,
       ),
     );
@@ -740,9 +751,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     final sleepTimerSubtitle = sleepTimerEndsAt == null
         ? null
         : context.l10n.nowPlayingSleepTimerActive(
-            MaterialLocalizations.of(
-              context,
-            ).formatTimeOfDay(TimeOfDay.fromDateTime(sleepTimerEndsAt)),
+            MaterialLocalizations.of(context)
+                .formatTimeOfDay(TimeOfDay.fromDateTime(sleepTimerEndsAt)),
           );
     final action = await showAppBottomSheet<String>(
       context: context,
@@ -1170,9 +1180,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
               return Center(
                 child: Text(
                   context.l10n.nowPlayingNoMetadata,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               );
             }
@@ -1262,9 +1271,8 @@ class _PlaybackControls extends ConsumerWidget {
                   children: [
                     Text(
                       formatClock(position.inSeconds),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
                     Expanded(
                       child: Center(
@@ -1276,9 +1284,8 @@ class _PlaybackControls extends ConsumerWidget {
                     ),
                     Text(
                       formatClock(duration.inSeconds),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),

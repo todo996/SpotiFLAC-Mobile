@@ -8,6 +8,7 @@ import 'package:spotiflac_android/l10n/l10n.dart';
 import 'package:spotiflac_android/models/track.dart';
 import 'package:spotiflac_android/providers/download_queue_provider.dart';
 import 'package:spotiflac_android/providers/extension_provider.dart';
+import 'package:spotiflac_android/providers/online_playback_provider.dart';
 import 'package:spotiflac_android/providers/recent_access_provider.dart';
 import 'package:spotiflac_android/services/platform_bridge.dart';
 import 'package:spotiflac_android/utils/image_cache_utils.dart';
@@ -504,6 +505,12 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
           : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                HeaderCircleButton(
+                  icon: Icons.play_arrow_rounded,
+                  tooltip: context.l10n.previewPlay,
+                  onPressed: tracks.isEmpty ? null : () => _playAll(tracks),
+                ),
+                const SizedBox(width: 12),
                 _buildLoveAllButton(),
                 const SizedBox(width: 12),
                 Flexible(
@@ -696,6 +703,18 @@ class _AlbumScreenState extends ConsumerState<AlbumScreen>
       artistNameForPicker: widget.albumName,
       recommendedService: _recommendedDownloadService(),
     );
+  }
+
+  Future<void> _playAll(List<Track> tracks) async {
+    try {
+      await ref
+          .read(onlinePlaybackProvider.notifier)
+          .playTrackList(tracks, providerId: _recommendedDownloadService());
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.friendlyError(error))));
+    }
   }
 
   Widget _buildLoveAllButton() {

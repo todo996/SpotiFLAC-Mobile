@@ -9,6 +9,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:spotiflac_android/services/app_state_database.dart';
 import 'package:spotiflac_android/services/platform_bridge.dart';
 import 'package:spotiflac_android/services/playback_normalization.dart';
+import 'package:spotiflac_android/services/streaming_proxy_service.dart';
+import 'package:spotiflac_android/services/streaming_service.dart';
 import 'package:spotiflac_android/utils/int_utils.dart';
 import 'package:spotiflac_android/utils/logger.dart';
 import 'package:spotiflac_android/utils/string_utils.dart';
@@ -100,6 +102,8 @@ class PlayableMedia {
   });
 
   bool get isContentUri => source.startsWith('content://');
+
+  bool get isStreamSource => isStreamMediaSource(source);
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -209,8 +213,9 @@ Map<String, dynamic> mergePlaybackFileMetadata(
   return merged;
 }
 
-typedef PlaybackMetadataReader =
-    Future<Map<String, dynamic>> Function(String path);
+typedef PlaybackMetadataReader = Future<Map<String, dynamic>> Function(
+  String path,
+);
 
 /// Reads playback metadata with a small bounded retry window for transient
 /// cold-start/native bridge failures.
@@ -281,6 +286,7 @@ class MusicPlayerHandler extends BaseAudioHandler
   int _index = -1;
   int _playRequestGeneration = 0;
   String? _activeResolvedPath;
+  String? _activeStreamingProxyToken;
   bool _disposed = false;
   bool _initialized = false;
   bool _sourceReady = false;
@@ -602,6 +608,18 @@ class MusicPlayerHandler extends BaseAudioHandler
     if (index < 0 || index >= _media.length) return;
     unawaited(() async {
       final media = _media[index];
+      if (media.isStreamSource) {
+        if (_index == index &&
+            generation == _playRequestGeneration &&
+            normalizationGeneration == _normalizationGeneration) {
+          try {
+            await _player.setVolume(1.0);
+          } catch (e) {
+            _log.w('Failed to reset streaming volume: $e');
+          }
+        }
+        return;
+      }
       var resolved = media.isContentUri
           ? _resolvedPathCache[media.source]
           : media.source;
@@ -638,6 +656,7 @@ class MusicPlayerHandler extends BaseAudioHandler
   }
 
   Future<String?> _resolveSource(PlayableMedia media) async {
+    if (media.isStreamSource) return null;
     if (!media.isContentUri) return media.source;
 
     final cached = _resolvedPathCache[media.source];
@@ -707,6 +726,31 @@ class MusicPlayerHandler extends BaseAudioHandler
     } catch (e) {
       _log.w('Failed to delete SAF playback temp file: $e');
     }
+  }
+
+  void _releaseStreamingProxy() {
+    final token = _activeStreamingProxyToken;
+    _activeStreamingProxyToken = null;
+    if (token != null) {
+      StreamingProxyService.instance.release(token);
+    }
+  }
+
+  Future<({Source source, String? proxyToken})> _sourceForResolvedStream(
+    ResolvedAudioStream stream,
+  ) async {
+    final mimeType = stream.contentType.isEmpty ? null : stream.contentType;
+    if (stream.headers.isEmpty && stream.uri.scheme == 'https') {
+      return (
+        source: UrlSource(stream.uri.toString(), mimeType: mimeType),
+        proxyToken: null,
+      );
+    }
+    final lease = await StreamingProxyService.instance.open(stream);
+    return (
+      source: UrlSource(lease.uri.toString(), mimeType: mimeType),
+      proxyToken: lease.token,
+    );
   }
 
   Future<void> _cleanupPendingResolvedPaths() async {
@@ -988,6 +1032,93 @@ class MusicPlayerHandler extends BaseAudioHandler
     unawaited(_persistSession(position: playbackState.value.position));
   }
 
+  Future<void> _playStreamingMedia(
+    int index,
+    int generation,
+    PlayableMedia media,
+    Duration effectiveStartPosition,
+  ) async {
+    final request = decodeStreamMediaSource(media.source);
+    if (request == null) {
+      _log.e('Invalid stream descriptor for ${media.title}');
+      _broadcastState(playerState: PlayerState.stopped);
+      return;
+    }
+
+    try {
+      await musicPlayerExclusiveAudioHook?.call();
+    } catch (_) {}
+    if (!_isCurrentPlayRequest(generation, media)) return;
+
+    _switchingGeneration = generation;
+    String? pendingProxyToken;
+    try {
+      var stream = await StreamingService.resolveRequest(request);
+      if (stream.isExpiringSoon) {
+        stream = await StreamingService.resolveRequest(request);
+      }
+      if (!_isCurrentPlayRequest(generation, media)) return;
+
+      await _player.setAudioContext(_musicAudioContext);
+      if (!_isCurrentPlayRequest(generation, media)) return;
+      await _activateAudioSession();
+      if (!_isCurrentPlayRequest(generation, media)) return;
+      await _player.stop();
+      _releaseStreamingProxy();
+      _activeResolvedPath = null;
+      _sourceReady = false;
+      await _player.setVolume(1.0);
+      if (!_isCurrentPlayRequest(generation, media)) return;
+
+      final startAt = effectiveStartPosition > Duration.zero
+          ? effectiveStartPosition
+          : null;
+      var prepared = await _sourceForResolvedStream(stream);
+      pendingProxyToken = prepared.proxyToken;
+      try {
+        await _player.play(prepared.source, position: startAt);
+      } catch (firstError) {
+        if (pendingProxyToken != null) {
+          StreamingProxyService.instance.release(pendingProxyToken);
+          pendingProxyToken = null;
+        }
+        if (!_isCurrentPlayRequest(generation, media)) rethrow;
+        _log.w(
+          'Streaming source failed; resolving a fresh URL once: $firstError',
+        );
+        await _player.stop();
+        final retryStream = await StreamingService.resolveRequest(request);
+        if (!_isCurrentPlayRequest(generation, media)) return;
+        prepared = await _sourceForResolvedStream(retryStream);
+        pendingProxyToken = prepared.proxyToken;
+        await _player.play(prepared.source, position: startAt);
+      }
+
+      if (!_isCurrentPlayRequest(generation, media)) return;
+      _activeStreamingProxyToken = pendingProxyToken;
+      pendingProxyToken = null;
+      _sourceReady = true;
+      _pendingRestorePosition = null;
+      _broadcastPosition(effectiveStartPosition, force: true);
+      _broadcastState(playerState: PlayerState.playing);
+      _lastPeriodicPersistAt = DateTime.now();
+      unawaited(_persistSession(position: effectiveStartPosition));
+      unawaited(_ensureDurationKnown(index, generation));
+    } catch (e) {
+      if (!_isCurrentPlayRequest(generation, media)) return;
+      _sourceReady = false;
+      _log.e('Streaming playback failed for ${media.title}: $e');
+      _broadcastState(playerState: PlayerState.stopped);
+    } finally {
+      if (pendingProxyToken != null) {
+        StreamingProxyService.instance.release(pendingProxyToken);
+      }
+      if (_switchingGeneration == generation) {
+        _switchingGeneration = 0;
+      }
+    }
+  }
+
   Future<void> _playIndex(
     int index, {
     bool recordHistory = true,
@@ -1034,6 +1165,16 @@ class MusicPlayerHandler extends BaseAudioHandler
     _broadcastState(playerState: PlayerState.playing, loading: true);
     await _claimHardwareMediaButtons();
     if (!_isCurrentPlayRequest(generation, media)) return;
+
+    if (media.isStreamSource) {
+      await _playStreamingMedia(
+        index,
+        generation,
+        media,
+        effectiveStartPosition,
+      );
+      return;
+    }
 
     // Android opens SAF files through a short-lived file-descriptor lease.
     // MediaPlayer duplicates that descriptor, so the original can be closed
@@ -1088,6 +1229,7 @@ class MusicPlayerHandler extends BaseAudioHandler
       await _activateAudioSession();
       if (!_isCurrentPlayRequest(generation, media)) return;
       await _player.stop();
+      _releaseStreamingProxy();
       _sourceReady = false;
       if (!_isCurrentPlayRequest(generation, media)) return;
       await _player.setVolume(normalizationVolume);
@@ -1341,6 +1483,7 @@ class MusicPlayerHandler extends BaseAudioHandler
     _switchingGeneration = 0;
     _userPaused = true;
     await _player.stop();
+    _releaseStreamingProxy();
     _sourceReady = false;
     _activeResolvedPath = null;
     await _cleanupPendingResolvedPaths();
@@ -1492,6 +1635,7 @@ class MusicPlayerHandler extends BaseAudioHandler
     _subscriptions.clear();
     _sourceReady = false;
     await _player.dispose();
+    _releaseStreamingProxy();
     _activeResolvedPath = null;
     final tempPaths = <String>{
       ..._resolvedPathCache.values,
@@ -1574,7 +1718,9 @@ Future<void> restorePersistedPlaybackSession() async {
       if (entry is! Map) continue;
       final media = PlayableMedia.fromJson(Map<String, dynamic>.from(entry));
       if (media == null) continue;
-      if (!media.isContentUri && !await File(media.source).exists()) {
+      if (!media.isContentUri &&
+          !media.isStreamSource &&
+          !await File(media.source).exists()) {
         continue;
       }
       items.add(media);

@@ -313,9 +313,8 @@ class _TrackItemWithStatus extends ConsumerWidget {
                     children: [
                       Text(
                         track.name,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w500),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -344,6 +343,7 @@ class _TrackItemWithStatus extends ConsumerWidget {
                     ],
                   ),
                 ),
+                OnlinePlayButton(track: track),
                 PreviewButton(track: track),
                 TrackCollectionQuickActions(
                   track: track,
@@ -496,9 +496,8 @@ class _CollectionItemWidget extends StatelessWidget {
                     children: [
                       Text(
                         item.name,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w500),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -511,9 +510,8 @@ class _CollectionItemWidget extends StatelessWidget {
                                   : (isArtist
                                         ? context.l10n.recentTypeArtist
                                         : context.l10n.recentTypeAlbum)),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: colorScheme.onSurfaceVariant),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1405,9 +1403,8 @@ class _QuickPicksPageViewState extends State<_QuickPicksPageView> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
             widget.section.title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
         SizedBox(
@@ -1519,9 +1516,8 @@ class _QuickPicksPageViewState extends State<_QuickPicksPageView> {
                     item.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: widget.colorScheme.onSurface,
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: widget.colorScheme.onSurface),
                   ),
                   if (item.artists.isNotEmpty)
                     ClickableArtistName(

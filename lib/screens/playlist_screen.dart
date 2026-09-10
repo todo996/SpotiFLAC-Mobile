@@ -12,6 +12,7 @@ import 'package:spotiflac_android/models/track.dart';
 import 'package:spotiflac_android/providers/download_queue_provider.dart';
 import 'package:spotiflac_android/providers/extension_provider.dart';
 import 'package:spotiflac_android/providers/library_collections_provider.dart';
+import 'package:spotiflac_android/providers/online_playback_provider.dart';
 import 'package:spotiflac_android/utils/image_cache_utils.dart';
 import 'package:spotiflac_android/utils/cover_art_utils.dart';
 import 'package:spotiflac_android/utils/adaptive_layout.dart';
@@ -343,6 +344,12 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
       actions: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          HeaderCircleButton(
+            icon: Icons.play_arrow_rounded,
+            tooltip: context.l10n.previewPlay,
+            onPressed: _tracks.isEmpty ? null : _playAll,
+          ),
+          const SizedBox(width: 12),
           _buildLoveAllButton(),
           const SizedBox(width: 12),
           Flexible(child: _buildDownloadAllCenterButton(context)),
@@ -446,9 +453,9 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -479,6 +486,18 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen>
       playlistPosition: playlistPosition,
       forceQualityPicker: forceQualityPicker,
     );
+  }
+
+  Future<void> _playAll() async {
+    try {
+      await ref
+          .read(onlinePlaybackProvider.notifier)
+          .playTrackList(_tracks, providerId: _recommendedDownloadService());
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.friendlyError(error))));
+    }
   }
 
   Widget _buildLoveAllButton() {
