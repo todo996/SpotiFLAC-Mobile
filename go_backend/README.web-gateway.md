@@ -4,11 +4,14 @@ The Web gateway is a small HTTP host around the same Go extension/provider runti
 
 ## Endpoints
 
-- `GET /health` — gateway status and loaded metadata-provider count
+- `GET /health` — gateway readiness and loaded metadata-provider count
+- `GET /providers` — sanitized provider inventory, configuration completeness, auth readiness and capabilities
 - `GET /search?q=<query>&limit=<1..50>` — searches enabled metadata providers
 - `POST /resolve` — resolves a provider track to a short-lived HTTP(S) stream
 
 When `SPOTIFLAC_GATEWAY_TOKEN` is set, all endpoints require `Authorization: Bearer <token>`.
+
+`/providers` never returns provider setting values, access tokens, refresh tokens, OAuth state or other credentials. Secret settings are represented only by a boolean `configured` flag. Provider credentials remain in the encrypted gateway data directory.
 
 ## Required configuration
 
@@ -25,10 +28,10 @@ Environment variables:
 | `SPOTIFLAC_EXTENSION_STORAGE_KEY` | yes | — | Encrypt extension settings and credentials |
 | `SPOTIFLAC_GATEWAY_TOKEN` | strongly recommended on public hosts | empty | Protect server-to-server gateway requests |
 | `SPOTIFLAC_GATEWAY_ADDR` | no | `127.0.0.1:8787` | HTTP listen address |
-| `SPOTIFLAC_EXTENSIONS_DIR` | no | `./extensions` | Installed `.spx` extension packages |
-| `SPOTIFLAC_DATA_DIR` | no | `./data` | Persistent extension state |
+| `SPOTIFLAC_EXTENSIONS_DIR` | no | `./extensions` | Installed extension packages/directories |
+| `SPOTIFLAC_DATA_DIR` | no | `./data` | Persistent encrypted extension state |
 
-A healthy gateway with `providerCount: 0` is reachable but cannot search until at least one enabled metadata-provider extension is installed.
+A healthy gateway with `providerCount: 0` is reachable but cannot search until at least one enabled metadata-provider extension is installed. Provider-specific authentication or API credentials are provisioned on the gateway and persisted in `SPOTIFLAC_DATA_DIR`; the browser is intentionally not a credential store.
 
 ## Run directly
 
@@ -61,11 +64,18 @@ docker run --rm -p 8787:8787 \
   spotiflac-web-gateway
 ```
 
-Test readiness from the host with the same bearer token:
+Test readiness and inventory from the host with the same bearer token:
 
 ```bash
 curl -H 'Authorization: Bearer <long-random-token>' http://127.0.0.1:8787/health
+curl -H 'Authorization: Bearer <long-random-token>' http://127.0.0.1:8787/providers
 ```
+
+## Provider readiness
+
+The Web UI uses `/providers` to distinguish providers that are ready, disabled, missing required configuration, waiting for verification, or reporting an extension error. It also reports metadata/download/lyrics capabilities and a conservative stream mode.
+
+Qobuz Web and direct TIDAL sources are supported by the compatibility resolver already included in the shared backend. Amazon legacy streams are reported as `requires_processing` because they can require decryption or container conversion; the gateway does not falsely advertise them as directly playable.
 
 ## Vercel Web connection
 
