@@ -257,5 +257,316 @@
         "type": "int"
       }
     }
+  },
+  "dialogImportPlaylistTitle": "Nhập danh sách phát",
+  "@dialogImportPlaylistTitle": {
+    "description": "Dialog title - import CSV playlist"
+  },
+  "dialogImportPlaylistMessage": "Tìm thấy {count} bài hát trong tệp danh sách phát. Thêm chúng vào hàng chờ tải xuống?",
+  "@dialogImportPlaylistMessage": {
+    "description": "Dialog message - import playlist confirmation",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "csvImportTracks": "{count} bài hát từ CSV",
+  "@csvImportTracks": {
+    "description": "Label shown in quality picker for CSV import",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "collectionExportM3u": "Xuất dạng M3U8",
+  "@collectionExportM3u": {
+    "description": "Tooltip on the collection screen action that exports the track list as an M3U8 playlist file"
+  },
+  "collectionExportM3uDone": "Đã xuất {exported}/{total} bài hát",
+  "@collectionExportM3uDone": {
+    "description": "Snackbar after M3U8 export; tracks without a local file are not exported",
+    "placeholders": {
+      "exported": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "collectionExportM3uNone": "Không có tệp nhạc đã tải để xuất",
+  "@collectionExportM3uNone": {
+    "description": "Snackbar when an M3U8 export finds no local files"
+  },
+  "collectionExportM3uFailed": "Xuất danh sách phát thất bại",
+  "@collectionExportM3uFailed": {
+    "description": "Snackbar when writing or sharing the M3U8 export fails"
+  },
+  "trackOpenOn": "Mở bằng...",
+  "@trackOpenOn": {
+    "description": "Track option and sheet title listing streaming platforms where the track can be opened"
+  },
+  "trackOpenOnNoLinks": "Không tìm thấy liên kết nền tảng cho bài hát này.",
+  "@trackOpenOnNoLinks": {
+    "description": "Shown in the Open on sheet when song.link returns no links"
+  },
+  "libraryReviewDuplicates": "Kiểm tra bản trùng",
+  "@libraryReviewDuplicates": {
+    "description": "Library settings row opening the duplicate review sheet"
+  },
+  "libraryReviewDuplicatesSubtitle": "Tìm các bài hát được lưu nhiều lần",
+  "@libraryReviewDuplicatesSubtitle": {
+    "description": "Subtitle for the duplicate review settings row"
+  },
+  "duplicatesTitle": "Bản trùng",
+  "@duplicatesTitle": {
+    "description": "Title of the duplicate review sheet"
+  },
+  "duplicatesEmpty": "Không tìm thấy bài hát bị trùng.",
+  "@duplicatesEmpty": {
+    "description": "Shown when the duplicate review sheet finds nothing"
+  },
+  "duplicatesKeepBest": "Giữ bản tốt nhất",
+  "@duplicatesKeepBest": {
+    "description": "Button that deletes all but the highest-quality copy in a duplicate group"
+  },
+  "duplicatesKeepBestAll": "Giữ bản tốt nhất cho tất cả",
+  "@duplicatesKeepBestAll": {
+    "description": "Button that keeps the highest-quality copy in every duplicate group and deletes the rest"
+  },
+  "duplicatesKeepBestAllMessage": "Giữ bản tốt nhất của {groupCount} bài hát và xóa {count} bản chất lượng thấp hơn?\n\nCác tệp bị xóa sẽ được xóa khỏi bộ nhớ.",
+  "@duplicatesKeepBestAllMessage": {
+    "description": "Confirmation message for keeping the best copy across every duplicate group",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "groupCount": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicatesKeepBestMessage": "Xóa {count} bản chất lượng thấp hơn của \"{trackName}\"?",
+  "@duplicatesKeepBestMessage": {
+    "description": "Confirmation message for the keep-best action",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "trackName": {
+        "type": "String"
+      }
+    }
+  },
+  "duplicatesDeleteCopyMessage": "Xóa bản sao này của \"{trackName}\"?",
+  "@duplicatesDeleteCopyMessage": {
+    "description": "Confirmation message for deleting one duplicate copy",
+    "placeholders": {
+      "trackName": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarAddedToQueue": "Đã thêm \"{trackName}\" vào hàng chờ",
+  "@snackbarAddedToQueue": {
+    "description": "Snackbar - track added to download queue",
+    "placeholders": {
+      "trackName": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarAddedTracksToQueue": "Đã thêm {count} bài hát vào hàng chờ",
+  "@snackbarAddedTracksToQueue": {
+    "description": "Snackbar - multiple tracks added to queue",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarAlreadyDownloaded": "\"{trackName}\" đã được tải xuống",
+  "@snackbarAlreadyDownloaded": {
+    "description": "Snackbar - track already exists",
+    "placeholders": {
+      "trackName": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarAlreadyInLibrary": "\"{trackName}\" đã có trong thư viện của bạn",
+  "@snackbarAlreadyInLibrary": {
+    "description": "Snackbar - track already exists in local library",
+    "placeholders": {
+      "trackName": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarHistoryCleared": "Đã xóa lịch sử",
+  "@snackbarHistoryCleared": {
+    "description": "Snackbar - history deleted"
+  },
+  "snackbarDeletedTracks": "Đã xóa {count} bài hát",
+  "@snackbarDeletedTracks": {
+    "description": "Snackbar - tracks deleted",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snackbarCannotOpenFile": "Không thể mở tệp: {error}",
+  "@snackbarCannotOpenFile": {
+    "description": "Snackbar - file open error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarViewQueue": "Xem hàng chờ",
+  "@snackbarViewQueue": {
+    "description": "Snackbar action - view download queue"
+  },
+  "snackbarUrlCopied": "Đã sao chép liên kết {platform} vào bộ nhớ tạm",
+  "@snackbarUrlCopied": {
+    "description": "Snackbar - URL copied",
+    "placeholders": {
+      "platform": {
+        "type": "String",
+        "description": "Platform name (Spotify/Deezer)"
+      }
+    }
+  },
+  "snackbarFileNotFound": "Không tìm thấy tệp",
+  "@snackbarFileNotFound": {
+    "description": "Snackbar - file doesn't exist"
+  },
+  "snackbarSelectExtFile": "Vui lòng chọn tệp .spotiflac-ext",
+  "@snackbarSelectExtFile": {
+    "description": "Snackbar - wrong file type selected"
+  },
+  "snackbarProviderPrioritySaved": "Đã lưu thứ tự ưu tiên nguồn",
+  "@snackbarProviderPrioritySaved": {
+    "description": "Snackbar - provider order saved"
+  },
+  "snackbarMetadataProviderSaved": "Đã lưu thứ tự ưu tiên nguồn thông tin bài hát",
+  "@snackbarMetadataProviderSaved": {
+    "description": "Snackbar - metadata provider order saved"
+  },
+  "snackbarExtensionInstalled": "Đã cài {extensionName}.",
+  "@snackbarExtensionInstalled": {
+    "description": "Snackbar - extension installed successfully",
+    "placeholders": {
+      "extensionName": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarExtensionUpdated": "Đã cập nhật {extensionName}.",
+  "@snackbarExtensionUpdated": {
+    "description": "Snackbar - extension updated successfully",
+    "placeholders": {
+      "extensionName": {
+        "type": "String"
+      }
+    }
+  },
+  "snackbarFailedToInstall": "Không thể cài tiện ích",
+  "@snackbarFailedToInstall": {
+    "description": "Snackbar - extension install error"
+  },
+  "snackbarFailedToUpdate": "Không thể cập nhật tiện ích",
+  "@snackbarFailedToUpdate": {
+    "description": "Snackbar - extension update error"
+  },
+  "errorRateLimited": "Đã đạt giới hạn yêu cầu",
+  "@errorRateLimited": {
+    "description": "Error title - too many requests"
+  },
+  "errorRateLimitedMessage": "Có quá nhiều yêu cầu. Vui lòng chờ một lúc rồi tìm kiếm lại.",
+  "@errorRateLimitedMessage": {
+    "description": "Error message - rate limit explanation"
+  },
+  "errorNoTracksFound": "Không tìm thấy bài hát",
+  "@errorNoTracksFound": {
+    "description": "Error - search returned no results"
+  },
+  "searchEmptyResultSubtitle": "Hãy thử từ khóa khác",
+  "@searchEmptyResultSubtitle": {
+    "description": "Subtitle shown under the empty search result state on the home screen"
+  },
+  "errorUrlNotRecognized": "Không nhận diện được liên kết",
+  "@errorUrlNotRecognized": {
+    "description": "Error title - URL not handled by any extension or service"
+  },
+  "errorUrlNotRecognizedMessage": "Liên kết này chưa được hỗ trợ. Hãy kiểm tra URL và đảm bảo bạn đã cài tiện ích tương thích.",
+  "@errorUrlNotRecognizedMessage": {
+    "description": "Error message - URL not recognized explanation"
+  },
+  "errorUrlFetchFailed": "Không thể tải nội dung từ liên kết này. Vui lòng thử lại.",
+  "@errorUrlFetchFailed": {
+    "description": "Error message - generic URL fetch failure"
+  },
+  "errorMissingExtensionSource": "Không thể tải {item}: thiếu nguồn tiện ích",
+  "@errorMissingExtensionSource": {
+    "description": "Error - extension source not available",
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "actionPause": "Tạm dừng",
+  "@actionPause": {
+    "description": "Action button - pause download"
+  },
+  "actionResume": "Tiếp tục",
+  "@actionResume": {
+    "description": "Action button - resume download"
+  },
+  "actionCancel": "Hủy",
+  "@actionCancel": {
+    "description": "Action button - cancel operation"
+  },
+  "actionSelectAll": "Chọn tất cả",
+  "@actionSelectAll": {
+    "description": "Action button - select all items"
+  },
+  "actionDeselect": "Bỏ chọn",
+  "@actionDeselect": {
+    "description": "Action button - deselect all"
+  },
+  "selectionSelected": "Đã chọn {count}",
+  "@selectionSelected": {
+    "description": "Selection count indicator",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectionAllSelected": "Đã chọn tất cả bài hát",
+  "@selectionAllSelected": {
+    "description": "Status - all items selected"
+  },
+  "selectionSelectToDelete": "Chọn bài hát cần xóa",
+  "@selectionSelectToDelete": {
+    "description": "Placeholder when nothing selected"
+  },
+  "progressFetchingMetadata": "Đang lấy thông tin bài hát... {current}/{total}",
+  "@progressFetchingMetadata": {
+    "description": "Progress indicator - loading track info",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   }
 }
