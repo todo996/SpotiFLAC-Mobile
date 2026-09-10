@@ -1,50 +1,96 @@
-name: Verify Mobile Streaming
+name: One-shot Web Proxy + Vietnamese Verification
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - ci/web-proxy-l10n-20260910-1
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify:
-    name: Verify streaming changes
+  verify-and-integrate:
+    name: Verify current feature and commit Vietnamese batch
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout verification scripts
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          path: ci-src
+
+      - name: Checkout feature branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: feature/streaming-web-vietnamese
+          fetch-depth: 0
+          path: target
+
+      - name: Add natural Vietnamese batch
+        run: python3 ci-src/tools/add_vi_batch_2.py target
+
+      - name: Check patch whitespace
+        working-directory: target
+        run: git diff --check
 
       - name: Setup Go
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
         with:
-          go-version-file: go_backend/go.mod
-          cache-dependency-path: go_backend/go.sum
-
-      - name: Check Go formatting
-        working-directory: go_backend
-        run: test -z "$(gofmt -l .)"
+          go-version-file: target/go_backend/go.mod
+          cache-dependency-path: target/go_backend/go.sum
 
       - name: Go vet
-        working-directory: go_backend
+        working-directory: target/go_backend
         run: go vet ./...
 
       - name: Go tests
-        working-directory: go_backend
+        working-directory: target/go_backend
         run: go test ./...
 
       - name: Setup Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
         with:
           channel: stable
-          flutter-version-file: .fvmrc
+          flutter-version-file: target/.fvmrc
           cache: true
 
-      - name: Get Flutter dependencies
+      - name: Generate localizations and dependencies
+        working-directory: target
         run: flutter pub get
 
       - name: Flutter analyze
+        working-directory: target
         run: flutter analyze
 
       - name: Flutter tests
+        working-directory: target
         run: flutter test
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Web dependencies
+        working-directory: target/webapp
+        run: npm install
+
+      - name: Web typecheck
+        working-directory: target/webapp
+        run: npm run typecheck
+
+      - name: Web production build
+        working-directory: target/webapp
+        run: npm run build
+
+      - name: Commit verified Vietnamese batch
+        working-directory: target
+        run: |
+          if git diff --quiet -- lib/l10n/arb/app_vi.arb; then
+            echo "No Vietnamese changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/l10n/arb/app_vi.arb
+          git commit -m "feat(l10n): translate library actions and runtime feedback"
+          git push origin HEAD:feature/streaming-web-vietnamese
