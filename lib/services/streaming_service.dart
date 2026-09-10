@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:spotiflac_android/services/platform_bridge.dart';
 
+const _hostPrepareStreamActionPrefix =
+    '__spotiflac_host_prepare_stream_v1__:';
 const _hostResolveStreamActionPrefix =
     '__spotiflac_host_resolve_stream_v1__:';
 const _streamMediaSourcePrefix = 'spotiflac-stream-v1:';
@@ -10,17 +12,36 @@ class StreamMediaRequest {
   final String extensionId;
   final String trackId;
   final String quality;
+  final String sourceProviderId;
+  final String isrc;
+  final String trackName;
+  final String artistName;
+  final int durationMs;
+  final String deezerId;
 
   const StreamMediaRequest({
     required this.extensionId,
     required this.trackId,
     this.quality = '',
+    this.sourceProviderId = '',
+    this.isrc = '',
+    this.trackName = '',
+    this.artistName = '',
+    this.durationMs = 0,
+    this.deezerId = '',
   });
 
   Map<String, dynamic> toMap() => <String, dynamic>{
-    'extension_id': extensionId,
-    'track_id': trackId,
-    if (quality.isNotEmpty) 'quality': quality,
+    'extension_id': extensionId.trim(),
+    'track_id': trackId.trim(),
+    if (quality.trim().isNotEmpty) 'quality': quality.trim(),
+    if (sourceProviderId.trim().isNotEmpty)
+      'source_provider_id': sourceProviderId.trim(),
+    if (isrc.trim().isNotEmpty) 'isrc': isrc.trim(),
+    if (trackName.trim().isNotEmpty) 'track_name': trackName.trim(),
+    if (artistName.trim().isNotEmpty) 'artist_name': artistName.trim(),
+    if (durationMs > 0) 'duration_ms': durationMs,
+    if (deezerId.trim().isNotEmpty) 'deezer_id': deezerId.trim(),
   };
 
   static StreamMediaRequest? fromMap(Map<String, dynamic> map) {
@@ -32,7 +53,28 @@ class StreamMediaRequest {
       extensionId: extensionId,
       trackId: trackId,
       quality: quality,
+      sourceProviderId: (map['source_provider_id'] ?? '').toString().trim(),
+      isrc: (map['isrc'] ?? '').toString().trim(),
+      trackName: (map['track_name'] ?? '').toString().trim(),
+      artistName: (map['artist_name'] ?? '').toString().trim(),
+      durationMs: switch (map['duration_ms']) {
+        int value => value,
+        num value => value.toInt(),
+        String value => int.tryParse(value) ?? 0,
+        _ => 0,
+      },
+      deezerId: (map['deezer_id'] ?? '').toString().trim(),
     );
+  }
+
+  /// Older descriptors did not persist the source provider. Treat those as
+  /// already provider-native for backward compatibility. New online queues
+  /// always include this field, so cross-provider playback can resolve the
+  /// target provider's native ID just before playback starts.
+  bool get requiresProviderPreparation {
+    final source = sourceProviderId.trim();
+    if (source.isEmpty) return false;
+    return source.toLowerCase() != extensionId.trim().toLowerCase();
   }
 }
 
@@ -45,11 +87,7 @@ String encodeStreamMediaSource(StreamMediaRequest request) {
       'A streaming provider and track identifier are required.',
     );
   }
-  final payload = jsonEncode(<String, dynamic>{
-    'extension_id': extensionId,
-    'track_id': trackId,
-    if (request.quality.trim().isNotEmpty) 'quality': request.quality.trim(),
-  });
+  final payload = jsonEncode(request.toMap());
   return '$_streamMediaSourcePrefix${base64Url.encode(utf8.encode(payload)).replaceAll('=', '')}';
 }
 
@@ -163,18 +201,96 @@ class StreamResolutionException implements Exception {
   String toString() => message.isEmpty ? type : '$type: $message';
 }
 
+class _PreparedStreamTarget {
+  final String trackId;
+  final Map<String, dynamic> preparedContext;
+
+  const _PreparedStreamTarget({
+    required this.trackId,
+    this.preparedContext = const {},
+  });
+}
+
 class StreamingService {
   const StreamingService._();
 
   static Future<ResolvedAudioStream> resolveRequest(
     StreamMediaRequest request, {
     Map<String, dynamic>? preparedContext,
-  }) => resolve(
-    extensionId: request.extensionId,
-    trackId: request.trackId,
-    quality: request.quality,
-    preparedContext: preparedContext,
-  );
+  }) async {
+    var providerTrackId = request.trackId;
+    var effectivePreparedContext = <String, dynamic>{
+      if (preparedContext != null) ...preparedContext,
+    };
+
+    if (request.requiresProviderPreparation) {
+      final prepared = await _prepareRequest(request);
+      providerTrackId = prepared.trackId;
+      effectivePreparedContext = <String, dynamic>{
+        ...effectivePreparedContext,
+        ...prepared.preparedContext,
+      };
+    }
+
+    return resolve(
+      extensionId: request.extensionId,
+      trackId: providerTrackId,
+      quality: request.quality,
+      preparedContext: effectivePreparedContext.isEmpty
+          ? null
+          : effectivePreparedContext,
+    );
+  }
+
+  static Future<_PreparedStreamTarget> _prepareRequest(
+    StreamMediaRequest request,
+  ) async {
+    final preparationRequest = <String, dynamic>{
+      'source_provider_id': request.sourceProviderId.trim(),
+      'source_track_id': request.trackId.trim(),
+      if (request.isrc.trim().isNotEmpty) 'isrc': request.isrc.trim(),
+      if (request.trackName.trim().isNotEmpty)
+        'track_name': request.trackName.trim(),
+      if (request.artistName.trim().isNotEmpty)
+        'artist_name': request.artistName.trim(),
+      if (request.durationMs > 0) 'duration_ms': request.durationMs,
+      if (request.deezerId.trim().isNotEmpty)
+        'deezer_id': request.deezerId.trim(),
+    };
+    final payload = base64Url
+        .encode(utf8.encode(jsonEncode(preparationRequest)))
+        .replaceAll('=', '');
+    final result = await PlatformBridge.invokeExtensionAction(
+      request.extensionId.trim(),
+      '$_hostPrepareStreamActionPrefix$payload',
+    );
+    if (result['success'] != true) {
+      final type = (result['error_type'] ?? 'stream_unavailable').toString();
+      final message = (result['error_message'] ?? result['error'] ?? '')
+          .toString();
+      throw StreamResolutionException(type, message);
+    }
+
+    final trackId = (result['track_id'] ?? '').toString().trim();
+    if (trackId.isEmpty) {
+      throw const StreamResolutionException(
+        'missing_provider_track_id',
+        'The selected provider did not return a native track identifier.',
+      );
+    }
+
+    final context = <String, dynamic>{};
+    final rawContext = result['prepared_context'];
+    if (rawContext is Map) {
+      for (final entry in rawContext.entries) {
+        context[entry.key.toString()] = entry.value;
+      }
+    }
+    return _PreparedStreamTarget(
+      trackId: trackId,
+      preparedContext: Map.unmodifiable(context),
+    );
+  }
 
   static Future<ResolvedAudioStream> resolve({
     required String extensionId,
