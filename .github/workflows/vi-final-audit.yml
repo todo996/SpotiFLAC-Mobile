@@ -48,7 +48,9 @@ jobs:
               'remaining_count': len(remaining),
               'remaining': remaining,
           }
-          Path('tool/vi_remaining_report.json').write_text(
+          report_path = Path('tool/vi_remaining_report.json')
+          report_path.parent.mkdir(parents=True, exist_ok=True)
+          report_path.write_text(
               json.dumps(report, ensure_ascii=False, indent=2) + '\n',
               encoding='utf-8',
           )
