@@ -43,3 +43,4 @@ jobs:
 
 # This workflow is also updated deliberately after translation batches so the
 # report and the full branch verification run against the bot-created commit.
+# Batch 4 checkpoint.
