@@ -1,0 +1,117 @@
+name: Final Web and Gateway Validation
+
+on:
+  push:
+    branches:
+      - ci/final-streaming-web-20260910
+    paths:
+      - ".github/workflows/final-web-validation.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  web-gateway:
+    name: Web and Gateway final validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout validator snapshot
+        uses: actions/checkout@v6
+
+      - name: Apply final Vietnamese translations
+        run: python3 .github/scripts/apply_vi_final.py
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go_backend/go.mod
+          cache-dependency-path: go_backend/go.sum
+
+      - name: Test Web Gateway
+        working-directory: go_backend
+        run: go test ./webgateway -count=1
+
+      - name: Build Web Gateway binary
+        working-directory: go_backend
+        run: |
+          mkdir -p ../build
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o ../build/spotiflac-web-gateway-linux-amd64 ./cmd/web-gateway
+          test -s ../build/spotiflac-web-gateway-linux-amd64
+
+      - name: Build Web Gateway Docker image
+        working-directory: go_backend
+        run: docker build -f Dockerfile.web-gateway -t spotiflac-web-gateway:final-web .
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Install Web dependencies
+        working-directory: webapp
+        run: npm install --no-audit --no-fund
+
+      - name: Web typecheck
+        working-directory: webapp
+        run: npm run typecheck
+
+      - name: Web production build
+        working-directory: webapp
+        run: npm run build
+
+      - name: Verify Vietnamese final key parity
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('lib/l10n/arb')
+          en = json.loads((root / 'app_en.arb').read_text(encoding='utf-8'))
+          vi = json.loads((root / 'app_vi.arb').read_text(encoding='utf-8'))
+          allowed = {
+              'appName', 'trackAlbum', 'cueSplitAlbum',
+              'aboutKeepAndroidOpen', 'cacheSizeOnly', 'notifUpdateProgress',
+              'optionsReplayGain', 'recentTypeAlbum', 'storeRepoUrlHint',
+              'releaseTypeEp', 'trackConvertActionLabelLossless',
+              'trackConvertActionLabelLossy', 'regionCountryBR',
+              'regionCountryCA', 'regionCountryID', 'regionCountryMX',
+              'regionCountryXK',
+          }
+          en_keys = {k for k in en if not k.startswith('@')}
+          vi_keys = {k for k in vi if not k.startswith('@')}
+          assert en_keys == vi_keys, f'key mismatch: missing={sorted(en_keys-vi_keys)} extra={sorted(vi_keys-en_keys)}'
+          unexpected = sorted(k for k in en_keys if vi.get(k) == en.get(k) and k not in allowed)
+          assert not unexpected, f'untranslated={unexpected}'
+          for key in sorted(en_keys):
+              meta = en.get('@' + key)
+              placeholders = set(meta.get('placeholders', {})) if isinstance(meta, dict) and isinstance(meta.get('placeholders', {}), dict) else set()
+              for placeholder in placeholders:
+                  assert '{' + placeholder in str(vi[key]), f'{key}: missing {{{placeholder}}}'
+          print(f'Vietnamese effective completion: {len(en_keys)}/{len(en_keys)}')
+          PY
+
+      - name: Upload gateway binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-web-gateway-linux-amd64
+          path: build/spotiflac-web-gateway-linux-amd64
+          retention-days: 3
+
+      - name: Checkout feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: feature/streaming-web-vietnamese
+          path: feature
+
+      - name: Publish validated Vietnamese ARB
+        run: |
+          cd feature
+          python3 ../.github/scripts/apply_vi_final.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/l10n/arb/app_vi.arb
+          if git diff --cached --quiet; then
+            echo "Vietnamese ARB already up to date"
+          else
+            git commit -m "feat(l10n): complete Vietnamese translation"
+            git push origin HEAD:feature/streaming-web-vietnamese
+          fi
