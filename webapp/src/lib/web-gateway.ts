@@ -1,5 +1,17 @@
 import { normalizeTrack, type ResolvedWebStream, type SearchResponse } from "@/lib/music";
 
+export interface WebGatewayHealth {
+  configured: boolean;
+  reachable: boolean;
+  ready: boolean;
+  providerCount: number;
+  capabilities: {
+    search: boolean;
+    resolve: boolean;
+  };
+  error?: string;
+}
+
 function gatewayBase(): string | null {
   const value = process.env.SPOTIFLAC_WEB_GATEWAY_URL?.trim();
   return value ? value.replace(/\/$/, "") : null;
@@ -47,8 +59,6 @@ function normalizeStreamHeaders(value: unknown): Readonly<Record<string, string>
     if (key.includes("\r") || key.includes("\n") || headerValue.includes("\r") || headerValue.includes("\n")) {
       throw new Error("Resolver returned an invalid stream request header.");
     }
-    // Keep the surface bounded even if a misconfigured gateway returns a very
-    // large object. Normal provider auth/header sets are only a handful of keys.
     if (Object.keys(result).length >= 32 || key.length > 128 || headerValue.length > 8_192) {
       throw new Error("Resolver returned an oversized stream request header set.");
     }
@@ -59,6 +69,51 @@ function normalizeStreamHeaders(value: unknown): Readonly<Record<string, string>
 
 export function isWebGatewayConfigured(): boolean {
   return gatewayBase() !== null;
+}
+
+export async function gatewayHealth(): Promise<WebGatewayHealth> {
+  const base = gatewayBase();
+  const unavailable = (error?: string): WebGatewayHealth => ({
+    configured: base !== null,
+    reachable: false,
+    ready: false,
+    providerCount: 0,
+    capabilities: { search: false, resolve: false },
+    ...(error ? { error } : {}),
+  });
+  if (!base) return unavailable();
+
+  try {
+    const response = await fetch(`${base}/health`, {
+      headers: gatewayHeaders(),
+      cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
+    });
+    const payload = (await readJson(response)) as Record<string, unknown> | null;
+    if (!response.ok) {
+      return unavailable(String(payload?.error ?? `Gateway health check failed (${response.status}).`));
+    }
+
+    const rawCount = Number(payload?.providerCount ?? payload?.provider_count ?? 0);
+    const providerCount = Number.isFinite(rawCount) && rawCount > 0 ? Math.floor(rawCount) : 0;
+    const rawCapabilities = payload?.capabilities && typeof payload.capabilities === "object"
+      ? payload.capabilities as Record<string, unknown>
+      : {};
+    const capabilities = {
+      search: rawCapabilities.search === true,
+      resolve: rawCapabilities.resolve === true,
+    };
+
+    return {
+      configured: true,
+      reachable: true,
+      ready: providerCount > 0 && capabilities.search && capabilities.resolve,
+      providerCount,
+      capabilities,
+    };
+  } catch (error) {
+    return unavailable(error instanceof Error ? error.message : "Gateway health check failed.");
+  }
 }
 
 export async function gatewaySearch(query: string): Promise<SearchResponse> {

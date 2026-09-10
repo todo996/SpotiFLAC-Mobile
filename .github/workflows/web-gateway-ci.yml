@@ -41,9 +41,6 @@ jobs:
             exit 1
           fi
 
-      # The gateway package imports the root backend package, so this compiles
-      # the shared Go core while keeping this focused CI independent from
-      # timing-sensitive legacy tests owned by the broader mobile workflow.
       - name: Test gateway HTTP contract
         run: go test ./webgateway
 
@@ -55,3 +52,6 @@ jobs:
 
       - name: Build web gateway
         run: go build ./cmd/web-gateway
+
+      - name: Build gateway container
+        run: docker build -f Dockerfile.web-gateway -t spotiflac-web-gateway-ci .

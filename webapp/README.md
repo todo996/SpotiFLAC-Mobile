@@ -7,16 +7,16 @@ Independent Next.js/PWA client for SpotiFLAC. It lives under `webapp/` so the ex
 - Responsive desktop, laptop, tablet and mobile UI
 - Installable PWA shell with offline fallback
 - Provider-backed search through server routes
-- Full-track stream resolution through the Web gateway
+- Full-track stream resolution through the shared Go extension runtime
 - Same-origin audio proxy with Range/If-Range forwarding for seeking
 - Server-side provider headers so auth material is not exposed to browser JavaScript
 - HTML5 player with play/pause, seek, previous/next, shuffle and repeat
 - Media Session integration for OS/browser media controls
 - Persistent queue, volume, shuffle and repeat settings across PWA/browser reloads
 - Add to queue, remove from queue, clear queue and play-all flows
-- Secure server-side download proxy that resolves the provider source without exposing provider credentials
+- Secure server-side download proxy
 - Preview URL fallback when a full stream temporarily cannot be resolved
-- Health endpoint that reports Web-gateway readiness and supported capabilities
+- End-to-end health endpoint that reports gateway reachability, provider count and capabilities
 
 ## Development
 
@@ -27,40 +27,35 @@ npm run build
 npm run dev
 ```
 
-Open `http://localhost:3000`. Search/stream/download features require a configured provider gateway; the UI and PWA shell can still load without it.
+Open `http://localhost:3000`. Search/stream/download features require the included Go gateway plus at least one enabled metadata-provider extension.
+
+## Included provider gateway
+
+The repository now includes `go_backend/cmd/web-gateway`. It reuses the same extension manager, metadata search, provider priority/de-duplication and stream resolver used by the mobile backend instead of implementing a second provider stack.
+
+See `go_backend/README.web-gateway.md` for direct and Docker deployment. The gateway exposes:
+
+- `GET /health`
+- `GET /search?q=...`
+- `POST /resolve`
 
 ## Vercel deployment
 
 Create a Vercel project from this repository and set **Root Directory** to `webapp`. Next.js settings can remain auto-detected.
 
-Configure these server-side environment variables in Vercel:
+The Go gateway is a long-running service and should be deployed separately on a container/VPS host with HTTPS. Configure these server-only environment variables in Vercel:
 
-- `SPOTIFLAC_WEB_GATEWAY_URL` — base URL of the gateway. The gateway must expose `GET /search?q=...` and `POST /resolve`.
-- `SPOTIFLAC_WEB_GATEWAY_TOKEN` — optional bearer token used only between the Next.js server routes and the gateway.
-- `SPOTIFLAC_WEB_FORCE_STREAM_PROXY=1` — optional. Forces all playback through `/api/stream`. Without it, the proxy is selected automatically when a provider requires custom request headers or returns plain HTTP.
+- `SPOTIFLAC_WEB_GATEWAY_URL` — HTTPS base URL of the included Go gateway.
+- `SPOTIFLAC_WEB_GATEWAY_TOKEN` — same bearer token configured as `SPOTIFLAC_GATEWAY_TOKEN` on the gateway.
+- `SPOTIFLAC_WEB_FORCE_STREAM_PROXY=1` — optional; forces playback through `/api/stream`. Proxying is already selected automatically when provider request headers or plain HTTP require it.
 
 Never expose `SPOTIFLAC_WEB_GATEWAY_TOKEN` through a `NEXT_PUBLIC_*` variable.
 
 ## Gateway contract
 
-### `GET /search?q=<query>`
+`GET /search?q=<query>` returns `tracks`. Each track includes an extension-backed `provider_id`, which is later sent to the resolver with the provider-native track ID.
 
-The gateway should return either `tracks` or `results`. Each track should provide at least:
-
-```json
-{
-  "id": "provider-track-id",
-  "name": "Track name",
-  "artist_name": "Artist",
-  "provider_id": "provider-id"
-}
-```
-
-Optional fields include `album_name`, `cover_url`, `duration_ms`, `quality`, `explicit` and `preview_url`.
-
-### `POST /resolve`
-
-Request:
+`POST /resolve` request:
 
 ```json
 {
@@ -70,10 +65,11 @@ Request:
 }
 ```
 
-Response:
+Typical response:
 
 ```json
 {
+  "success": true,
   "url": "https://cdn.example/audio.flac",
   "headers": {
     "Authorization": "Bearer short-lived-provider-token"
@@ -89,7 +85,7 @@ Response:
 
 ## Web API routes
 
-- `GET /api/health` — PWA/API readiness and gateway status
+- `GET /api/health` — PWA readiness plus live gateway/provider readiness
 - `GET /api/search?q=...` — validated search adapter
 - `POST /api/resolve` — validated stream-resolution adapter
 - `GET|HEAD /api/stream?...` — same-origin stream proxy with media Range support
@@ -97,4 +93,4 @@ Response:
 
 ## Architecture rule
 
-The browser UI must not execute the native Flutter/gomobile filesystem or download stack directly. Provider work that requires extension execution, secret request headers, local filesystem access or other native capabilities belongs in a dedicated Web gateway/server adapter. This keeps the Web deployment compatible with Vercel while preserving the existing Android/iOS architecture.
+The browser UI must not execute the native Flutter/gomobile filesystem or download stack directly. Provider work that requires extension execution, secret request headers, local filesystem access or other native capabilities runs in the included Go Web gateway. This keeps the browser/Vercel deployment separated from native-only capabilities while preserving one shared provider runtime.

@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
-import { isWebGatewayConfigured } from "@/lib/web-gateway";
+import { gatewayHealth } from "@/lib/web-gateway";
 
 export const dynamic = "force-dynamic";
 
-export function GET() {
+export async function GET() {
+  const gateway = await gatewayHealth();
   return NextResponse.json(
     {
       ok: true,
       app: "spotiflac-web",
       platform: "web-pwa",
-      gatewayConfigured: isWebGatewayConfigured(),
+      gatewayConfigured: gateway.configured,
+      gatewayReachable: gateway.reachable,
+      gatewayReady: gateway.ready,
+      gatewayProviderCount: gateway.providerCount,
+      gatewayCapabilities: gateway.capabilities,
+      gatewayError: gateway.error,
       capabilities: {
         search: true,
         streaming: true,
