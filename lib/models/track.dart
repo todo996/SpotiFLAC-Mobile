@@ -134,6 +134,9 @@ class Track {
       discNumber: data['disc_number'] as int?,
       totalDiscs: data['total_discs'] as int?,
       releaseDate: data['release_date']?.toString(),
+      deezerId: normalizeOptionalString(
+        (data['deezer_id'] ?? data['deezerId'])?.toString(),
+      ),
       totalTracks: data['total_tracks'] as int?,
       source: effectiveSource,
       albumType: normalizeOptionalString(data['album_type']?.toString()),
