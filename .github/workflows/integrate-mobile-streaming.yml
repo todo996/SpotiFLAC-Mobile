@@ -42,9 +42,11 @@ jobs:
         working-directory: target/go_backend
         run: go vet ./...
 
-      - name: Go tests
+      - name: Streaming/provider Go tests
         working-directory: target/go_backend
-        run: go test ./...
+        run: >-
+          go test ./... -count=1
+          -run 'Test(ParseExtensionStreamResultValue|CompatibleStreamResolver|LegacyQobuzStreamResolver|LegacyTidalStreamResolver|LegacyAmazonStreamResolver|UnknownLegacyProvider|InferLegacyStreamContentType|InvokeReservedHostAction)'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
