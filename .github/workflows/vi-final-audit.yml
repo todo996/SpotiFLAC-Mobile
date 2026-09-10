@@ -1,13 +1,6 @@
 name: Vietnamese Final Audit
 
 on:
-  push:
-    branches:
-      - feature/streaming-web-vietnamese
-    paths:
-      - lib/l10n/arb/app_vi.arb
-      - lib/l10n/arb/app_en.arb
-      - .github/workflows/vi-final-audit.yml
   workflow_dispatch:
 
 permissions:
@@ -24,16 +17,12 @@ jobs:
         run: |
           python - <<'PY'
           import json
-          import re
           from pathlib import Path
 
           root = Path('lib/l10n/arb')
           en = json.loads((root / 'app_en.arb').read_text(encoding='utf-8'))
           vi = json.loads((root / 'app_vi.arb').read_text(encoding='utf-8'))
 
-          # These values are intentionally identical in natural Vietnamese:
-          # product/proper names, established technical terms, identifiers,
-          # unit-only templates and URL examples.
           allowed_invariants = {
               'downloadUrlHint',
               'appName',
