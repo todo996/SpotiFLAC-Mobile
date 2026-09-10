@@ -1,12 +1,6 @@
 name: Web App CI
 
 on:
-  push:
-    branches:
-      - feature/streaming-web-vietnamese
-    paths:
-      - 'webapp/**'
-      - '.github/workflows/web-ci.yml'
   workflow_dispatch:
 
 permissions:
