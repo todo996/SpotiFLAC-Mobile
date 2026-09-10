@@ -1,90 +1,35 @@
 name: Feature Branch CI
 
 on:
-  push:
-    branches:
-      - feature/streaming-web-vietnamese
-    paths:
-      - 'go_backend/**'
-      - 'lib/**'
-      - 'android/**'
-      - 'ios/**'
-      - 'pubspec.yaml'
-      - 'pubspec.lock'
-      - 'l10n.yaml'
-      - '.github/workflows/feature-ci.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   go:
-    name: Go bridge, format, vet & test
+    name: Go streaming validation
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: go_backend
     steps:
       - name: Checkout feature branch
         uses: actions/checkout@v6
         with:
           ref: feature/streaming-web-vietnamese
-          fetch-depth: 0
 
-      - name: Ensure reserved host stream dispatch
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go_backend/go.mod
+          cache-dependency-path: go_backend/go.sum
 
-          path = Path('go_backend/extension_manager.go')
-          text = path.read_text()
-          signature = 'func (m *extensionManager) InvokeAction(extensionID string, actionName string) (map[string]any, error) {\n'
-          insertion = '''func (m *extensionManager) InvokeAction(extensionID string, actionName string) (map[string]any, error) {
-          \tif result, handled, err := invokeReservedHostAction(extensionID, actionName); handled {
-          \t\treturn result, err
-          \t}
-          '''
-          if insertion not in text:
-              if signature not in text:
-                  raise SystemExit('InvokeAction signature not found; refusing to patch')
-              path.write_text(text.replace(signature, insertion, 1))
-          PY
-          gofmt -w go_backend/extension_manager.go \
-            go_backend/extension_stream.go \
-            go_backend/extension_stream_test.go \
-            go_backend/extension_host_action.go \
-            go_backend/extension_host_action_test.go
-
-      - name: Check new streaming files formatting
-        run: test -z "$(gofmt -l go_backend/extension_stream.go go_backend/extension_stream_test.go go_backend/extension_host_action.go go_backend/extension_host_action_test.go)"
+      - name: Check streaming file formatting
+        run: test -z "$(gofmt -l extension_stream.go extension_stream_test.go extension_host_action.go extension_host_action_test.go)"
 
       - name: Test Go backend
-        id: gotest
-        working-directory: go_backend
-        shell: bash
-        run: |
-          set -o pipefail
-          go test ./... 2>&1 | tee ../go-test.log
-
-      - name: Upload Go test log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: feature-go-test-log-${{ github.run_id }}
-          path: go-test.log
-          if-no-files-found: ignore
-          retention-days: 1
+        run: go test ./...
 
       - name: Vet Go backend
-        working-directory: go_backend
         run: go vet ./...
-
-      - name: Commit verified bridge patch
-        run: |
-          if git diff --quiet; then
-            echo 'No generated bridge patch to commit.'
-            exit 0
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add go_backend/extension_manager.go go_backend/extension_stream.go go_backend/extension_stream_test.go go_backend/extension_host_action.go go_backend/extension_host_action_test.go
-          git commit -m 'feat(streaming): wire stream resolver through existing host action bridge'
-          git push origin HEAD:feature/streaming-web-vietnamese
