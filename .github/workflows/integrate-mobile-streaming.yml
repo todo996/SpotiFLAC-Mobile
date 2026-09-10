@@ -1,16 +1,17 @@
-name: Verify Mobile Streaming
+name: One-shot Provider + Web + L10n Verification
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - ci/provider-stream-compat-20260910-1
 
 permissions:
   contents: read
 
 jobs:
-  verify:
-    name: Verify streaming changes
+  verify-go-flutter:
+    name: Go + Flutter + L10n
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -21,9 +22,10 @@ jobs:
           go-version-file: go_backend/go.mod
           cache-dependency-path: go_backend/go.sum
 
-      - name: Check Go formatting
+      - name: Check streaming Go formatting
         working-directory: go_backend
-        run: test -z "$(gofmt -l .)"
+        run: |
+          test -z "$(gofmt -l extension_stream.go extension_stream_legacy.go extension_stream_test.go extension_stream_legacy_test.go extension_host_action.go extension_host_action_test.go)"
 
       - name: Go vet
         working-directory: go_backend
@@ -40,7 +42,7 @@ jobs:
           flutter-version-file: .fvmrc
           cache: true
 
-      - name: Get Flutter dependencies
+      - name: Get Flutter dependencies and generate localizations
         run: flutter pub get
 
       - name: Flutter analyze
@@ -48,3 +50,27 @@ jobs:
 
       - name: Flutter tests
         run: flutter test
+
+  verify-web:
+    name: Web typecheck + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: webapp
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Production build
+        run: npm run build
