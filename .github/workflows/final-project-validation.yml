@@ -1,0 +1,345 @@
+name: Final Project Validation
+
+on:
+  push:
+    branches:
+      - ci/final-streaming-web-20260910
+    paths:
+      - ".github/workflows/final-project-validation.yml"
+      - ".github/scripts/apply_vi_final.py"
+
+permissions:
+  contents: write
+
+jobs:
+  quality:
+    name: Full tests, Web and Gateway
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift /usr/local/.ghcup
+          df -h
+
+      - name: Checkout final feature snapshot
+        uses: actions/checkout@v6
+
+      - name: Apply final Vietnamese translations
+        run: python3 .github/scripts/apply_vi_final.py
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go_backend/go.mod
+          cache-dependency-path: go_backend/go.sum
+
+      - name: Check changed Go formatting
+        working-directory: go_backend
+        run: |
+          files="web_gateway_exports.go webgateway/backend.go webgateway/server.go webgateway/server_test.go cmd/web-gateway/main.go extension_stream.go extension_stream_test.go extension_stream_legacy.go extension_stream_legacy_test.go extension_host_action.go extension_host_action_test.go"
+          unformatted="$(gofmt -l $files)"
+          if [ -n "$unformatted" ]; then
+            printf 'Files need gofmt:\n%s\n' "$unformatted"
+            exit 1
+          fi
+
+      - name: Go vet entire backend
+        working-directory: go_backend
+        run: go vet ./...
+
+      - name: Go test entire backend
+        working-directory: go_backend
+        run: go test ./... -count=1
+
+      - name: Build Web gateway binary
+        working-directory: go_backend
+        run: |
+          mkdir -p ../build
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o ../build/spotiflac-web-gateway-linux-amd64 ./cmd/web-gateway
+          test -s ../build/spotiflac-web-gateway-linux-amd64
+
+      - name: Build Web gateway Docker image
+        working-directory: go_backend
+        run: docker build -f Dockerfile.web-gateway -t spotiflac-web-gateway:final .
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Flutter analyze
+        run: flutter analyze
+
+      - name: Flutter tests
+        run: flutter test
+
+      - name: Vietnamese final quality gate
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('lib/l10n/arb')
+          en = json.loads((root / 'app_en.arb').read_text(encoding='utf-8'))
+          vi = json.loads((root / 'app_vi.arb').read_text(encoding='utf-8'))
+          allowed = {
+              'appName', 'trackAlbum', 'cueSplitAlbum',
+              'aboutKeepAndroidOpen', 'cacheSizeOnly', 'notifUpdateProgress',
+              'optionsReplayGain', 'recentTypeAlbum', 'storeRepoUrlHint',
+              'releaseTypeEp', 'trackConvertActionLabelLossless',
+              'trackConvertActionLabelLossy', 'regionCountryBR',
+              'regionCountryCA', 'regionCountryID', 'regionCountryMX',
+              'regionCountryXK',
+          }
+          en_keys = {k for k in en if not k.startswith('@')}
+          vi_keys = {k for k in vi if not k.startswith('@')}
+          problems = []
+          if en_keys != vi_keys:
+              problems.append(f'key mismatch missing={sorted(en_keys-vi_keys)} extra={sorted(vi_keys-en_keys)}')
+          unexpected = sorted(k for k in en_keys if vi.get(k) == en.get(k) and k not in allowed)
+          if unexpected:
+              problems.append('untranslated=' + ','.join(unexpected))
+          stale = sorted(k for k in allowed if k not in en_keys or vi.get(k) != en.get(k))
+          if stale:
+              problems.append('stale_allowlist=' + ','.join(stale))
+          for key in sorted(en_keys & vi_keys):
+              meta = en.get('@' + key)
+              placeholders = set(meta.get('placeholders', {})) if isinstance(meta, dict) and isinstance(meta.get('placeholders', {}), dict) else set()
+              for placeholder in placeholders:
+                  if '{' + placeholder not in str(vi[key]):
+                      problems.append(f'{key}: missing {{{placeholder}}}')
+          translated = sum(1 for k in en_keys if vi.get(k) != en.get(k))
+          print(f'Vietnamese raw translated: {translated}/{len(en_keys)} ({translated*100/len(en_keys):.2f}%)')
+          print(f'Approved language-neutral invariants: {len(allowed)}')
+          print(f'Effective completion: {len(en_keys)-len(unexpected)}/{len(en_keys)}')
+          if problems:
+              print('\n'.join('ERROR: ' + p for p in problems))
+              raise SystemExit(1)
+          PY
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+
+      - name: Install Web dependencies
+        working-directory: webapp
+        run: npm ci
+
+      - name: Web typecheck
+        working-directory: webapp
+        run: npm run typecheck
+
+      - name: Web production build
+        working-directory: webapp
+        run: npm run build
+
+      - name: Upload gateway binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-web-gateway-linux-amd64
+          path: build/spotiflac-web-gateway-linux-amd64
+          retention-days: 3
+
+  android:
+    name: Android release APKs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift /usr/local/.ghcup
+          df -h
+
+      - name: Checkout final feature snapshot
+        uses: actions/checkout@v6
+
+      - name: Apply final Vietnamese translations
+        run: python3 .github/scripts/apply_vi_final.py
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go_backend/go.mod
+          cache-dependency-path: go_backend/go.sum
+
+      - name: Install Android NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;29.0.14206865" "platforms;android-37.0" "build-tools;37.0.0"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
+
+      - name: Build Go backend for Android
+        working-directory: go_backend
+        env:
+          CGO_ENABLED: 1
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile
+          gomobile init
+          mkdir -p ../android/app/libs
+          gomobile bind -target=android/arm,android/arm64 -androidapi 24 -o ../android/app/libs/gobackend.aar .
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Generate localizations and icons
+        run: |
+          flutter gen-l10n
+          dart run flutter_launcher_icons
+
+      - name: Build unsigned release APKs
+        run: bash scripts/build_android.sh
+
+      - name: Verify APK outputs
+        run: |
+          test -s build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          test -s build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          ls -lah build/app/outputs/flutter-apk/
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-android-apks
+          path: |
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          retention-days: 3
+
+  ios:
+    name: iOS unsigned IPA
+    runs-on: macos-15
+    steps:
+      - name: Checkout final feature snapshot
+        uses: actions/checkout@v6
+
+      - name: Apply final Vietnamese translations
+        run: python3 .github/scripts/apply_vi_final.py
+
+      - name: Select Xcode 26.1.1
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.1.1.app
+          xcodebuild -version
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go_backend/go.mod
+          cache-dependency-path: go_backend/go.sum
+
+      - name: Build Go backend for iOS
+        env:
+          CGO_ENABLED: 1
+        run: bash scripts/build_ios.sh
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Normalize ffmpeg plugin scripts
+        run: |
+          find "$HOME/.pub-cache/hosted" -path "*ffmpeg_kit_flutter_new_full*/scripts/*.sh" -type f -print0 |
+            while IFS= read -r -d '' f; do
+              perl -pi -e 's/\r$//' "$f"
+              chmod +x "$f"
+            done
+
+      - name: Generate localizations and icons
+        run: |
+          flutter gen-l10n
+          dart run flutter_launcher_icons
+
+      - name: Configure Flutter iOS release
+        run: flutter build ios --release --no-codesign --config-only --dart-define="GIT_COMMIT=$(git rev-parse --short=8 HEAD)"
+
+      - name: Archive unsigned iOS app
+        working-directory: ios
+        run: |
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/Runner.xcarchive \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM=""
+
+      - name: Create unsigned IPA
+        run: |
+          mkdir -p build/ios/ipa/Payload
+          cp -R ios/build/Runner.xcarchive/Products/Applications/Runner.app build/ios/ipa/Payload/
+          cd build/ios/ipa
+          zip -r SpotiFLAC-final-ios-unsigned.ipa Payload
+          rm -rf Payload
+          test -s SpotiFLAC-final-ios-unsigned.ipa
+          ls -lah SpotiFLAC-final-ios-unsigned.ipa
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-ios-ipa
+          path: build/ios/ipa/SpotiFLAC-final-ios-unsigned.ipa
+          retention-days: 3
+
+  publish-vietnamese:
+    name: Publish validated Vietnamese ARB
+    needs: [quality, android, ios]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout validator snapshot
+        uses: actions/checkout@v6
+        with:
+          path: validator
+
+      - name: Checkout feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: feature/streaming-web-vietnamese
+          path: feature
+
+      - name: Apply validated translation patch
+        working-directory: feature
+        run: python3 ../validator/.github/scripts/apply_vi_final.py
+
+      - name: Commit validated Vietnamese translation
+        working-directory: feature
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/l10n/arb/app_vi.arb
+          if git diff --cached --quiet; then
+            echo "Vietnamese ARB already up to date"
+          else
+            git commit -m "feat(l10n): complete Vietnamese translation"
+            git push origin HEAD:feature/streaming-web-vietnamese
+          fi
