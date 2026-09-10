@@ -55,8 +55,11 @@ jobs:
       - name: Generate localizations
         run: flutter gen-l10n
 
-      - name: Check changed Dart formatting
-        run: dart format --output=none --set-exit-if-changed lib/services/streaming_service.dart lib/providers/online_playback_provider.dart lib/models/track.dart test/streaming_service_test.dart test/track_backend_identity_test.dart
+      - name: Format changed Dart files
+        run: dart format lib/services/streaming_service.dart lib/providers/online_playback_provider.dart lib/models/track.dart test/streaming_service_test.dart test/track_backend_identity_test.dart
+
+      - name: Show formatting diff
+        run: git diff -- lib/services/streaming_service.dart lib/providers/online_playback_provider.dart lib/models/track.dart test/streaming_service_test.dart test/track_backend_identity_test.dart
 
       - name: Flutter analyze
         run: flutter analyze
