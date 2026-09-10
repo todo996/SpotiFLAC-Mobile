@@ -1,0 +1,54 @@
+name: Fix Vietnamese Batch Validator
+
+on:
+  push:
+    branches:
+      - feature/streaming-web-vietnamese
+    paths:
+      - ".github/workflows/fix-vietnamese-batch-validator.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: feature/streaming-web-vietnamese
+
+      - name: Fix Batch 2 placeholder validation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/workflows/apply-vietnamese-batch-2.yml')
+          text = path.read_text(encoding='utf-8')
+          old = """          placeholder = re.compile(r'\\{([A-Za-z_][A-Za-z0-9_]*)')
+          for key, value in translations.items():
+              expected = set(placeholder.findall(str(base[key])))
+              actual = set(placeholder.findall(value))
+              if expected != actual:
+                  raise SystemExit(f'Placeholder mismatch for {key}: {expected} != {actual}')
+"""
+          new = """          for key, value in translations.items():
+              metadata = base.get('@' + key, {})
+              expected = set((metadata.get('placeholders') or {}).keys()) if isinstance(metadata, dict) else set()
+              missing = [name for name in expected if ('{' + name + '}') not in value and ('{' + name + ',') not in value]
+              if missing:
+                  raise SystemExit(f'Missing placeholder(s) for {key}: {missing}')
+"""
+          if old not in text:
+              raise SystemExit('Validator block not found')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+
+      - name: Commit validator fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/apply-vietnamese-batch-2.yml
+          git commit -m "fix(l10n): validate declared ARB placeholders"
+          git push origin HEAD:feature/streaming-web-vietnamese
