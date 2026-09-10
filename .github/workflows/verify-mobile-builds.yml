@@ -2,11 +2,6 @@ name: Verify Mobile Builds
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feature/streaming-web-vietnamese
-    paths:
-      - ".github/workflows/verify-mobile-builds.yml"
 
 permissions:
   contents: read
