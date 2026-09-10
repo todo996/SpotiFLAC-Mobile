@@ -40,3 +40,6 @@ jobs:
               value = str(base[key]).replace('\n', '\\n')
               print(json.dumps({'key': key, 'en': value}, ensure_ascii=False))
           PY
+
+# This workflow is also updated deliberately after translation batches so the
+# report and the full branch verification run against the bot-created commit.
