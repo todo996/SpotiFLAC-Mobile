@@ -55,8 +55,8 @@ class PreviewButton extends ConsumerWidget {
           color: colorScheme.primary,
         ),
         tooltip: isPlaying
-            ? context.l10n.previewStop
-            : context.l10n.previewPlay,
+            ? context.l10n.actionPause
+            : context.l10n.trackMetadataPlay,
         onPressed: () =>
             ref.read(musicPlayerControllerProvider).togglePlayPause(isPlaying),
       );
@@ -194,9 +194,9 @@ class _OnlinePlayButtonState extends ConsumerState<OnlinePlayButton> {
             : Icons.play_circle_fill_rounded,
         color: colorScheme.primary,
       ),
-      // Reuse the existing localized transport labels until dedicated online
-      // playback strings are added to every locale.
-      tooltip: isPlaying ? context.l10n.previewStop : context.l10n.previewPlay,
+      tooltip: isPlaying
+          ? context.l10n.actionPause
+          : context.l10n.trackMetadataPlay,
       onPressed: isCurrent
           ? () => ref
                 .read(musicPlayerControllerProvider)
