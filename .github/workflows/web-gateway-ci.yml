@@ -41,11 +41,17 @@ jobs:
             exit 1
           fi
 
-      - name: Test Go backend and gateway
-        run: go test ./...
+      # The gateway package imports the root backend package, so this compiles
+      # the shared Go core while keeping this focused CI independent from
+      # timing-sensitive legacy tests owned by the broader mobile workflow.
+      - name: Test gateway HTTP contract
+        run: go test ./webgateway
 
-      - name: Vet Go backend and gateway
-        run: go vet ./...
+      - name: Compile shared backend package
+        run: go test . -run '^$'
+
+      - name: Vet gateway and shared backend
+        run: go vet . ./webgateway ./cmd/web-gateway
 
       - name: Build web gateway
         run: go build ./cmd/web-gateway
