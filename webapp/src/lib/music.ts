@@ -27,6 +27,12 @@ export interface ResolveStreamRequest {
 
 export interface ResolvedWebStream {
   url: string;
+  /**
+   * Provider request headers are server-only. API routes must never serialize
+   * this field back to the browser because it can contain short-lived auth
+   * material. `/api/stream` consumes it when a same-origin proxy is required.
+   */
+  headers?: Readonly<Record<string, string>>;
   contentType?: string;
   expiresAtMs?: number;
   provider?: string;
