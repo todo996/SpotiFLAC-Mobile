@@ -35,8 +35,8 @@ jobs:
           print(f'TRANSLATED={len(translated)}')
           print(f'MISSING={len(missing)}')
           print(f'COVERAGE={pct:.2f}%')
-          print('--- FIRST 180 MISSING ---')
-          for key in missing[:180]:
+          print('--- FIRST 360 MISSING ---')
+          for key in missing[:360]:
               value = str(base[key]).replace('\n', '\\n')
               print(json.dumps({'key': key, 'en': value}, ensure_ascii=False))
           PY
