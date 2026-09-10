@@ -967,6 +967,9 @@ func (m *extensionManager) UnloadAllExtensions() {
 }
 
 func (m *extensionManager) InvokeAction(extensionID string, actionName string) (map[string]any, error) {
+	if result, handled, err := invokeReservedHostAction(extensionID, actionName); handled {
+		return result, err
+	}
 	m.mu.RLock()
 	ext, exists := m.extensions[extensionID]
 	enabled := exists && ext.Enabled
