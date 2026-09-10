@@ -1,16 +1,7 @@
 name: Web Gateway CI
 
 on:
-  push:
-    branches:
-      - feature/streaming-web-vietnamese
-    paths:
-      - "go_backend/**"
-      - ".github/workflows/web-gateway-ci.yml"
-  pull_request:
-    paths:
-      - "go_backend/**"
-      - ".github/workflows/web-gateway-ci.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
