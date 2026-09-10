@@ -30,9 +30,34 @@ export async function POST(request: NextRequest) {
 
   try {
     const stream = await gatewayResolveStream({ providerId, trackId, quality });
-    return NextResponse.json(stream, {
-      headers: { "Cache-Control": "private, no-store" },
-    });
+    const requiresProxy =
+      Object.keys(stream.headers ?? {}).length > 0 ||
+      stream.url.toLowerCase().startsWith("http://") ||
+      process.env.SPOTIFLAC_WEB_FORCE_STREAM_PROXY === "1";
+
+    let playbackUrl = stream.url;
+    if (requiresProxy) {
+      const proxyUrl = new URL("/api/stream", request.url);
+      proxyUrl.searchParams.set("providerId", providerId);
+      proxyUrl.searchParams.set("trackId", trackId);
+      if (quality) proxyUrl.searchParams.set("quality", quality);
+      playbackUrl = proxyUrl.toString();
+    }
+
+    // Provider headers are intentionally omitted. They are consumed only by
+    // /api/stream so bearer tokens, cookies, signed values, or custom headers
+    // never become visible to browser JavaScript.
+    return NextResponse.json(
+      {
+        url: playbackUrl,
+        contentType: stream.contentType,
+        expiresAtMs: stream.expiresAtMs,
+        provider: stream.provider,
+        quality: stream.quality,
+        proxied: requiresProxy,
+      },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Không thể lấy nguồn phát nhạc." },
