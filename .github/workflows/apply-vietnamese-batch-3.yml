@@ -1,0 +1,234 @@
+name: Apply Vietnamese Batch 3
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/streaming-web-vietnamese
+    paths:
+      - ".github/workflows/apply-vietnamese-batch-3.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: feature/streaming-web-vietnamese
+
+      - name: Merge natural Vietnamese translations
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('lib/l10n/arb/app_vi.arb')
+          base_path = Path('lib/l10n/arb/app_en.arb')
+          vi = json.loads(path.read_text(encoding='utf-8'))
+          base = json.loads(base_path.read_text(encoding='utf-8'))
+          translations = {
+            'libraryLastScanned': 'Quét lần cuối: {time}',
+            'libraryLastScannedNever': 'Chưa từng quét',
+            'libraryScanning': 'Đang quét...',
+            'libraryScanFinalizing': 'Đang hoàn tất thư viện...',
+            'libraryScanProgress': '{progress}% của {total} tệp',
+            'libraryInLibrary': 'Đã có trong thư viện',
+            'libraryRemovedMissingFiles': 'Đã xóa {count} tệp bị thiếu khỏi thư viện',
+            'libraryCleared': 'Đã xóa dữ liệu thư viện',
+            'libraryStorageAccessRequired': 'Cần quyền truy cập bộ nhớ',
+            'libraryStorageAccessMessage': 'SpotiFLAC cần quyền truy cập bộ nhớ để quét thư viện nhạc. Hãy cấp quyền trong phần cài đặt.',
+            'libraryFolderNotExist': 'Thư mục đã chọn không tồn tại',
+            'librarySourceDownloaded': 'Đã tải xuống',
+            'librarySourceLocal': 'Cục bộ',
+            'libraryFilterAll': 'Tất cả',
+            'libraryFilterDownloaded': 'Đã tải xuống',
+            'libraryFilterLocal': 'Cục bộ',
+            'libraryFilterTitle': 'Bộ lọc',
+            'libraryFilterReset': 'Đặt lại',
+            'libraryFilterApply': 'Áp dụng',
+            'libraryFilterSource': 'Nguồn',
+            'libraryFilterQuality': 'Chất lượng',
+            'libraryFilterQualityHiRes': 'Hi-Res (24-bit)',
+            'libraryFilterQualityCD': 'CD (16-bit)',
+            'libraryFilterQualityLossy': 'Nén mất dữ liệu',
+            'libraryFilterFormat': 'Định dạng',
+            'libraryFilterMetadata': 'Thông tin bài hát',
+            'libraryFilterMetadataComplete': 'Đủ thông tin bài hát',
+            'libraryFilterMetadataMissingAny': 'Thiếu ít nhất một thông tin',
+            'libraryFilterMetadataMissingYear': 'Thiếu năm phát hành',
+            'libraryFilterMetadataMissingGenre': 'Thiếu thể loại',
+            'libraryFilterMetadataMissingAlbumArtist': 'Thiếu nghệ sĩ album',
+            'libraryFilterSort': 'Sắp xếp',
+            'libraryFilterSortLatest': 'Mới nhất',
+            'libraryFilterSortOldest': 'Cũ nhất',
+            'libraryFilterSortAlbumAsc': 'Album (A–Z)',
+            'libraryFilterSortAlbumDesc': 'Album (Z–A)',
+            'libraryFilterSortGenreAsc': 'Thể loại (A–Z)',
+            'libraryFilterSortGenreDesc': 'Thể loại (Z–A)',
+            'timeJustNow': 'Vừa xong',
+            'timeMinutesAgo': '{count} phút trước',
+            'timeHoursAgo': '{count} giờ trước',
+            'tutorialWelcomeTitle': 'Chào mừng đến với SpotiFLAC Mobile!',
+            'tutorialWelcomeDesc': 'Tìm hiểu cách tìm nhạc bằng tiện ích, chọn chất lượng mong muốn và quản lý lượt tải trong SpotiFLAC Mobile.',
+            'tutorialWelcomeTip1': 'Tìm bằng tiện ích đã cài hoặc dán liên kết nhạc được hỗ trợ',
+            'tutorialWelcomeTip2': 'Chọn chất lượng âm thanh mà nguồn tải xuống cung cấp',
+            'tutorialWelcomeTip3': 'Tự động nhúng thông tin bài hát, ảnh bìa, lời và thông tin phát hành',
+            'tutorialSearchTitle': 'Tìm nhạc',
+            'tutorialSearchDesc': 'Tìm bằng tiện ích đã chọn hoặc dán liên kết nhạc được hỗ trợ.',
+            'tutorialDownloadTitle': 'Tải nhạc',
+            'tutorialDownloadDesc': 'Chọn chất lượng có sẵn, bắt đầu tải và theo dõi tiến trình trong hàng chờ.',
+            'tutorialLibraryTitle': 'Thư viện của bạn',
+            'tutorialLibraryDesc': 'Nhạc đã tải và nhạc cục bộ đã quét được sắp xếp trong Thư viện.',
+            'tutorialLibraryTip1': 'Quản lý các lượt tải đang chạy, đang chờ và đã hoàn tất từ hàng chờ của Thư viện',
+            'tutorialLibraryTip2': 'Chạm vào bài hát để phát bằng trình phát tích hợp',
+            'tutorialLibraryTip3': 'Duyệt bài hát, album và danh sách phát ở dạng danh sách hoặc lưới',
+            'tutorialExtensionsTitle': 'Tiện ích',
+            'tutorialExtensionsDesc': 'Tiện ích bổ sung khả năng tìm kiếm, tải xuống, lấy thông tin bài hát, lời bài hát và các tích hợp khác.',
+            'tutorialExtensionsTip1': 'Mở tab Kho tiện ích để khám phá các tiện ích hữu ích',
+            'tutorialExtensionsTip2': 'Chọn nguồn cho tìm kiếm, tải xuống, metadata và nguồn dự phòng',
+            'tutorialExtensionsTip3': 'Kết nối tài khoản khi cần và luôn cập nhật tiện ích',
+            'tutorialSettingsTitle': 'Tùy chỉnh trải nghiệm',
+            'tutorialSettingsDesc': 'Tinh chỉnh tải xuống, phát nhạc, cách Thư viện hoạt động, giao diện và bộ nhớ.',
+            'tutorialSettingsTip1': 'Đổi vị trí tải xuống và cách sắp xếp thư mục',
+            'tutorialSettingsTip2': 'Thiết lập chất lượng, số lượt tải đồng thời, tên tệp và cách chuyển đổi',
+            'tutorialSettingsTip3': 'Tùy chỉnh chủ đề và giao diện ứng dụng',
+            'tutorialReadyMessage': 'Mọi thứ đã sẵn sàng. Chọn tiện ích, sau đó tìm kiếm hoặc dán liên kết được hỗ trợ.',
+            'libraryForceFullScan': 'Quét lại toàn bộ',
+            'libraryForceFullScanSubtitle': 'Quét lại tất cả tệp và bỏ qua bộ nhớ đệm',
+            'cleanupOrphanedDownloads': 'Dọn lượt tải không còn tệp',
+            'cleanupOrphanedDownloadsSubtitle': 'Xóa các mục lịch sử có tệp không còn tồn tại',
+            'cleanupOrphanedDownloadsResult': 'Đã xóa {count} mục không còn tệp khỏi lịch sử',
+            'cleanupOrphanedDownloadsNone': 'Không tìm thấy mục nào cần dọn',
+            'cacheTitle': 'Bộ nhớ & bộ nhớ đệm',
+            'cacheSummaryTitle': 'Tổng quan bộ nhớ đệm',
+            'cacheSummarySubtitle': 'Xóa bộ nhớ đệm sẽ không xóa các tệp nhạc đã tải.',
+            'cacheEstimatedTotal': 'Dung lượng bộ nhớ đệm ước tính: {size}',
+            'cacheSectionStorage': 'Dữ liệu đệm',
+            'cacheSectionMaintenance': 'Bảo trì',
+            'cacheAppDirectory': 'Thư mục cache của ứng dụng',
+            'cacheAppDirectoryDesc': 'Phản hồi HTTP, dữ liệu WebView và dữ liệu tạm khác của ứng dụng.',
+            'cacheTempDirectory': 'Thư mục tạm',
+            'cacheTempDirectoryDesc': 'Các tệp tạm sinh ra khi tải xuống và chuyển đổi âm thanh.',
+            'cacheCoverImage': 'Bộ nhớ đệm ảnh bìa',
+            'cacheCoverImageDesc': 'Ảnh bìa album và bài hát đã tải. Ảnh sẽ được tải lại khi cần hiển thị.',
+            'cacheLibraryCover': 'Bộ nhớ đệm ảnh bìa thư viện',
+            'cacheLibraryCoverDesc': 'Ảnh bìa trích xuất từ tệp nhạc cục bộ. Ảnh sẽ được trích xuất lại ở lần quét tiếp theo.',
+            'libraryPlaybackNormalization': 'Chuẩn hóa âm lượng',
+            'libraryPlaybackNormalizationSubtitle': 'Cân bằng độ lớn giữa các bài dựa trên thẻ ReplayGain hoặc R128 khi có',
+            'cacheAudioAnalysis': 'Bộ nhớ đệm phân tích âm thanh',
+            'cacheAudioAnalysisDesc': 'Phổ âm và kết quả phân tích đã lưu. Dữ liệu sẽ được phân tích lại khi mở lần sau.',
+            'cacheExploreFeed': 'Bộ nhớ đệm Khám phá',
+            'cacheExploreFeedDesc': 'Nội dung tab Khám phá như bản phát hành mới và xu hướng. Dữ liệu sẽ được làm mới khi truy cập lại.',
+            'cacheTrackLookup': 'Bộ nhớ đệm tra cứu bài hát',
+            'cacheTrackLookupDesc': 'Kết quả tra ID bài hát Spotify/Deezer. Xóa mục này có thể làm vài lần tìm kiếm tiếp theo chậm hơn.',
+            'cacheCleanupUnusedDesc': 'Xóa lịch sử tải không còn tệp và các mục thư viện có tệp bị thiếu.',
+            'cacheNoData': 'Không có dữ liệu đệm',
+            'cacheSizeWithFiles': '{size} trong {count} tệp',
+            'cacheSizeOnly': '{size}',
+            'cacheEntries': '{count} mục',
+            'cacheClearSuccess': 'Đã xóa: {target}',
+            'cacheClearConfirmTitle': 'Xóa bộ nhớ đệm?',
+            'cacheClearConfirmMessage': 'Thao tác này sẽ xóa dữ liệu đệm của {target}. Các tệp nhạc đã tải sẽ không bị xóa.',
+            'cacheClearAllConfirmTitle': 'Xóa toàn bộ bộ nhớ đệm?',
+            'cacheClearAllConfirmMessage': 'Thao tác này sẽ xóa tất cả nhóm dữ liệu đệm trên trang này. Các tệp nhạc đã tải sẽ không bị xóa.',
+            'cacheClearAll': 'Xóa toàn bộ bộ nhớ đệm',
+            'cacheCleanupUnused': 'Dọn dữ liệu không còn dùng',
+            'cacheCleanupUnusedSubtitle': 'Xóa lịch sử tải không còn tệp và các mục thư viện bị thiếu',
+            'cacheCleanupResult': 'Dọn dẹp hoàn tất: {downloadCount} lượt tải không còn tệp, {libraryCount} mục thư viện bị thiếu',
+            'cacheRefreshStats': 'Làm mới thống kê',
+            'trackSaveCoverArt': 'Lưu ảnh bìa',
+            'trackSaveLyrics': 'Lưu lời bài hát (.lrc)',
+            'trackSaveLyricsProgress': 'Đang lưu lời bài hát...',
+            'trackReEnrich': 'Bổ sung lại thông tin',
+            'trackReEnrichOnlineSubtitle': 'Tìm thông tin trực tuyến và nhúng vào tệp',
+            'trackReEnrichBatchSubtitle': 'Chọn cập nhật trực tuyến hoặc thủ công, sau đó xem lại mọi thay đổi trước khi ghi',
+            'trackReEnrichFieldCover': 'Ảnh bìa',
+            'trackReEnrichFieldLyrics': 'Lời bài hát',
+            'trackReEnrichFieldBasicTags': 'Album, nghệ sĩ album',
+            'trackReEnrichFieldTrackInfo': 'Số bài & số đĩa',
+            'trackReEnrichFieldReleaseInfo': 'Ngày phát hành & ISRC',
+            'trackReEnrichFieldExtra': 'Thể loại, hãng phát hành, bản quyền',
+            'trackReEnrichSelectAll': 'Chọn tất cả',
+            'trackReEnrichModeIsrc': 'Chỉ ISRC',
+            'trackReEnrichModeIsrcSubtitle': 'Tìm và thêm mã định danh bản ghi mà không thay đổi các thẻ khác',
+            'trackReEnrichModeMissing': 'Điền thông tin còn thiếu',
+            'trackReEnrichModeMissingSubtitle': 'Giữ các giá trị hiện có và chỉ điền những trường đang trống',
+            'trackReEnrichModeReplace': 'Cập nhật các thẻ đã chọn',
+            'trackReEnrichModeReplaceSubtitle': 'Chọn những giá trị hiện có được phép thay bằng metadata trực tuyến',
+            'trackReEnrichModeManual': 'Đặt giá trị chung',
+            'trackReEnrichModeManualSubtitle': 'Áp dụng cùng một giá trị cho mọi bài hát đã chọn',
+            'trackReEnrichManualFieldsTitle': 'Giá trị sẽ áp dụng',
+            'trackReEnrichManualHint': 'Để trống trường nếu muốn giữ giá trị hiện tại. Tên bài, số thứ tự và ISRC sẽ không thay đổi.',
+            'trackReEnrichFieldsTitle': 'Các thẻ cần cập nhật',
+            'trackReEnrichReview': 'Xem lại thay đổi',
+            'trackReEnrichReviewTitle': 'Xem lại thay đổi metadata',
+            'trackReEnrichReviewSubtitle': '{changeCount} thay đổi được đề xuất trên {trackCount} bài hát',
+            'trackReEnrichNoChanges': 'Không tìm thấy thay đổi metadata nào cho các bài hát đã chọn.',
+            'trackReEnrichApplyChanges': 'Áp dụng thay đổi',
+            'trackReEnrichRefreshOnline': 'Làm mới từ Internet',
+            'trackEditMetadata': 'Sửa thông tin bài hát',
+            'trackCoverSaved': 'Đã lưu ảnh bìa vào {fileName}',
+            'trackCoverNoSource': 'Không có nguồn ảnh bìa',
+            'trackLyricsSaved': 'Đã lưu lời bài hát vào {fileName}',
+            'trackReEnrichProgress': 'Đang bổ sung lại thông tin bài hát...',
+            'trackReEnrichSearching': 'Đang tìm thông tin bài hát trực tuyến...',
+            'trackReEnrichPreparing': 'Đang chuẩn bị các thay đổi metadata...',
+            'trackReEnrichSuccess': 'Đã bổ sung lại thông tin bài hát',
+            'trackReEnrichFfmpegFailed': 'Không thể nhúng metadata bằng FFmpeg',
+            'queueFlacAction': 'Thêm FLAC vào hàng chờ',
+            'queueFlacConfirmMessage': 'Tìm bản khớp trực tuyến cho các bài đã chọn và thêm lượt tải FLAC vào hàng chờ.\n\nCác tệp hiện có sẽ không bị sửa hoặc xóa.\n\nChỉ những kết quả có độ tin cậy cao mới được tự động thêm.\n\nĐã chọn {count} bài',
+            'queueFlacNoReliableMatches': 'Không tìm thấy bản khớp trực tuyến đủ tin cậy cho các mục đã chọn',
+            'queueFlacQueuedWithSkipped': 'Đã thêm {addedCount} bài vào hàng chờ, bỏ qua {skippedCount} bài',
+            'trackSaveFailed': 'Không thể lưu: {error}',
+            'trackConvertFormat': 'Chuyển đổi định dạng',
+            'trackConvertTitle': 'Chuyển đổi âm thanh',
+            'trackConvertTargetFormat': 'Định dạng đích',
+            'trackConvertBitrate': 'Bitrate',
+            'trackConvertKeepOriginal': 'Giữ tệp gốc',
+            'trackConvertKeepOriginalDescription': 'Thêm tệp đã chuyển đổi thành một mục riêng trong thư viện',
+            'trackConvertConfirmTitle': 'Xác nhận chuyển đổi',
+            'trackConvertConfirmMessage': 'Chuyển từ {sourceFormat} sang {targetFormat} ở {bitrate}?\n\nTệp gốc sẽ bị xóa sau khi chuyển đổi.',
+            'trackConvertConfirmMessageLossless': 'Chuyển từ {sourceFormat} sang {targetFormat}? (Lossless — không giảm chất lượng)\n\nTệp gốc sẽ bị xóa sau khi chuyển đổi.',
+            'trackConvertConfirmKeepOriginal': 'Chuyển từ {sourceFormat} sang {targetFormat}?\n\nTệp gốc sẽ được giữ lại và tệp đã chuyển đổi sẽ được thêm thành mục riêng trong thư viện.',
+            'trackConvertLosslessHint': 'Chuyển đổi lossless — không giảm chất lượng',
+            'trackConvertConverting': 'Đang chuyển đổi âm thanh...',
+            'trackConvertSuccess': 'Đã chuyển sang {format}',
+            'trackConvertFailed': 'Chuyển đổi thất bại',
+            'cueSplitTitle': 'Tách album theo CUE',
+            'cueSplitAlbum': 'Album: {album}',
+            'cueSplitArtist': 'Nghệ sĩ: {artist}',
+            'cueSplitTrackCount': '{count} bài hát',
+            'cueSplitConfirmTitle': 'Xác nhận tách album CUE',
+          }
+
+          unknown = sorted(set(translations) - set(base))
+          if unknown:
+              raise SystemExit(f'Unknown translation keys: {unknown}')
+
+          for key, value in translations.items():
+              metadata = base.get('@' + key, {})
+              expected = set((metadata.get('placeholders') or {}).keys()) if isinstance(metadata, dict) else set()
+              missing = [name for name in expected if ('{' + name + '}') not in value and ('{' + name + ',') not in value]
+              if missing:
+                  raise SystemExit(f'Missing placeholder(s) for {key}: {missing}')
+
+          vi.update(translations)
+          path.write_text(json.dumps(vi, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(f'Applied {len(translations)} Vietnamese translations')
+          PY
+
+      - name: Validate JSON
+        run: python3 -m json.tool lib/l10n/arb/app_vi.arb >/dev/null
+
+      - name: Commit Vietnamese batch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/l10n/arb/app_vi.arb
+          git diff --cached --quiet && exit 0
+          git commit -m "feat(l10n): translate library cache and metadata UI"
+          git push origin HEAD:feature/streaming-web-vietnamese
