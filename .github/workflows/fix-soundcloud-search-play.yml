@@ -1,0 +1,143 @@
+name: Fix SoundCloud Search Play
+
+on:
+  push:
+    branches:
+      - fix/soundcloud-search-play-20260910
+    paths:
+      - .github/workflows/fix-soundcloud-search-play.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: fix/soundcloud-search-play-20260910
+          fetch-depth: 0
+
+      - name: Restore online play button on artist search results
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          artist = Path('lib/screens/artist_screen.dart')
+          text = artist.read_text()
+          import_line = "import 'package:spotiflac_android/widgets/preview_button.dart';\n"
+          anchor = "import 'package:spotiflac_android/widgets/track_collection_quick_actions.dart';\n"
+          if import_line not in text:
+              if anchor not in text:
+                  raise SystemExit('artist_screen import anchor not found')
+              text = text.replace(anchor, anchor + import_line, 1)
+              artist.write_text(text)
+
+          widgets = Path('lib/screens/artist_screen_widgets.dart')
+          text = widgets.read_text()
+          old = """                TrackCollectionQuickActions(\n                  track: track,\n                  hasLocalPlaybackCandidate: isInHistory || isInLocalLibrary,\n                ),\n"""
+          new = """                OnlinePlayButton(track: track),\n                TrackCollectionQuickActions(\n                  track: track,\n                  hasLocalPlaybackCandidate: isInHistory || isInLocalLibrary,\n                ),\n"""
+          if "OnlinePlayButton(track: track),\n                TrackCollectionQuickActions(" not in text:
+              if old not in text:
+                  raise SystemExit('artist popular-track action anchor not found')
+              text = text.replace(old, new, 1)
+              widgets.write_text(text)
+          PY
+
+          git diff --check
+          git diff -- lib/screens/artist_screen.dart lib/screens/artist_screen_widgets.dart
+
+      - name: Commit fix
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "Patch already applied"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/screens/artist_screen.dart lib/screens/artist_screen_widgets.dart
+          git commit -m "fix: restore online play on extension artist tracks"
+          git push origin HEAD:fix/soundcloud-search-play-20260910
+
+  ios:
+    needs: patch
+    runs-on: macos-15
+    steps:
+      - name: Checkout patched branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: fix/soundcloud-search-play-20260910
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.1.1.app/Contents/Developer
+
+      - name: Setup Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: go_backend/go.mod
+          cache-dependency-path: go_backend/go.sum
+
+      - name: Build iOS Go backend
+        env:
+          CGO_ENABLED: '1'
+        run: bash scripts/build_ios.sh
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          version-file: .fvmrc
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Normalize FFmpeg script
+        run: |
+          if [ -f scripts/build_ffmpeg_ios.sh ]; then
+            sed -i '' $'s/\r$//' scripts/build_ffmpeg_ios.sh
+            chmod +x scripts/build_ffmpeg_ios.sh
+          fi
+
+      - name: Generate localizations and icons
+        run: |
+          flutter gen-l10n
+          dart run flutter_launcher_icons
+
+      - name: Configure iOS release
+        run: flutter build ios --release --no-codesign --config-only --dart-define="GIT_COMMIT=$(git rev-parse --short=8 HEAD)"
+
+      - name: Archive unsigned iOS app
+        run: |
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/Runner.xcarchive \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM=""
+
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p build/ios/ipa/Payload
+          cp -R ios/build/Runner.xcarchive/Products/Applications/Runner.app build/ios/ipa/Payload/
+          cd build/ios/ipa
+          zip -r SpotiFLAC-SoundCloud-Search-Play-Fix-unsigned.ipa Payload
+          rm -rf Payload
+          test -s SpotiFLAC-SoundCloud-Search-Play-Fix-unsigned.ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: SpotiFLAC-SoundCloud-Search-Play-Fix-iOS
+          path: build/ios/ipa/SpotiFLAC-SoundCloud-Search-Play-Fix-unsigned.ipa
+          retention-days: 3
+          if-no-files-found: error
