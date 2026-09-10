@@ -57,8 +57,21 @@ jobs:
         run: test -z "$(gofmt -l go_backend/extension_stream.go go_backend/extension_stream_test.go go_backend/extension_host_action.go go_backend/extension_host_action_test.go)"
 
       - name: Test Go backend
+        id: gotest
         working-directory: go_backend
-        run: go test ./...
+        shell: bash
+        run: |
+          set -o pipefail
+          go test ./... 2>&1 | tee ../go-test.log
+
+      - name: Upload Go test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feature-go-test-log-${{ github.run_id }}
+          path: go-test.log
+          if-no-files-found: ignore
+          retention-days: 1
 
       - name: Vet Go backend
         working-directory: go_backend
