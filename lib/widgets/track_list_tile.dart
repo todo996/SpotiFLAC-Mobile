@@ -106,6 +106,9 @@ class TrackListTile extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Full-track streaming is an explicit additive action. The row tap
+          // below keeps the original local-play/download behavior unchanged.
+          OnlinePlayButton(track: track),
           PreviewButton(track: track),
           TrackCollectionQuickActions(
             track: track,
