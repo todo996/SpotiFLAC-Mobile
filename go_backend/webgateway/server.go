@@ -33,6 +33,7 @@ func NewHandler(backend Backend, token string) http.Handler {
 	server := &Server{backend: backend, token: strings.TrimSpace(token)}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", server.handleHealth)
+	mux.HandleFunc("GET /providers", server.handleProviders)
 	mux.HandleFunc("GET /search", server.handleSearch)
 	mux.HandleFunc("POST /resolve", server.handleResolve)
 	return server.authenticate(mux)
@@ -70,10 +71,20 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 			"authenticated": true,
 		},
 		"capabilities": map[string]bool{
-			"search":  true,
-			"resolve": true,
+			"search":    true,
+			"resolve":   true,
+			"providers": true,
 		},
 	})
+}
+
+func (s *Server) handleProviders(w http.ResponseWriter, _ *http.Request) {
+	payload, err := s.backend.Providers()
+	if err != nil {
+		writeError(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	writeRawJSON(w, http.StatusOK, payload)
 }
 
 func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
