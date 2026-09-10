@@ -4,6 +4,11 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import { PwaInstallButton } from "@/components/pwa-install-button";
 import type { PlayerQueueItem, SearchResponse, WebTrack } from "@/lib/music";
 
+const QUEUE_STORAGE_KEY = "spotiflac.web.queue.v1";
+const SETTINGS_STORAGE_KEY = "spotiflac.web.player-settings.v1";
+
+type RepeatMode = "off" | "all" | "one";
+
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return "00:00";
   const whole = Math.floor(seconds);
@@ -19,6 +24,24 @@ function queueItem(track: WebTrack): PlayerQueueItem {
   return { ...track, queueId: `${track.providerId}:${track.id}:${random}` };
 }
 
+function isQueueItem(value: unknown): value is PlayerQueueItem {
+  if (!value || typeof value !== "object") return false;
+  const data = value as Record<string, unknown>;
+  return ["queueId", "id", "name", "providerId"].every(
+    (key) => typeof data[key] === "string" && String(data[key]).trim().length > 0,
+  );
+}
+
+function downloadUrl(track: WebTrack): string {
+  const params = new URLSearchParams({
+    providerId: track.providerId,
+    trackId: track.id,
+    filename: `${track.artistName ? `${track.artistName} - ` : ""}${track.name}`,
+  });
+  if (track.quality) params.set("quality", track.quality);
+  return `/api/download?${params.toString()}`;
+}
+
 async function readApiError(response: Response, fallback: string): Promise<string> {
   try {
     const payload = (await response.json()) as { error?: unknown };
@@ -32,6 +55,7 @@ async function readApiError(response: Response, fallback: string): Promise<strin
 export function WebMusicApp() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const requestGeneration = useRef(0);
+  const restoredRef = useRef(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<WebTrack[]>([]);
   const [searching, setSearching] = useState(false);
@@ -42,10 +66,69 @@ export function WebMusicApp() {
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>("off");
+  const [shuffle, setShuffle] = useState(false);
+  const [gatewayConfigured, setGatewayConfigured] = useState<boolean | null>(null);
   const [message, setMessage] = useState("Tìm một bài hát để bắt đầu nghe.");
   const [error, setError] = useState<string | null>(null);
 
   const current = currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null;
+
+  useEffect(() => {
+    try {
+      const rawQueue = localStorage.getItem(QUEUE_STORAGE_KEY);
+      if (rawQueue) {
+        const parsed = JSON.parse(rawQueue) as unknown;
+        if (Array.isArray(parsed)) setQueue(parsed.filter(isQueueItem).slice(0, 500));
+      }
+      const rawSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (rawSettings) {
+        const settings = JSON.parse(rawSettings) as Record<string, unknown>;
+        const storedVolume = Number(settings.volume);
+        if (Number.isFinite(storedVolume)) setVolume(Math.min(1, Math.max(0, storedVolume)));
+        if (settings.repeatMode === "off" || settings.repeatMode === "all" || settings.repeatMode === "one") {
+          setRepeatMode(settings.repeatMode);
+        }
+        if (typeof settings.shuffle === "boolean") setShuffle(settings.shuffle);
+      }
+    } catch {
+      localStorage.removeItem(QUEUE_STORAGE_KEY);
+      localStorage.removeItem(SETTINGS_STORAGE_KEY);
+    } finally {
+      restoredRef.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    try {
+      localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue));
+    } catch {
+      // Storage can be unavailable in private browsing; playback still works.
+    }
+  }, [queue]);
+
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ volume, repeatMode, shuffle }));
+    } catch {
+      // Ignore storage failures and keep the in-memory player usable.
+    }
+  }, [repeatMode, shuffle, volume]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/health", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload: { gatewayConfigured?: unknown }) => {
+        if (!cancelled) setGatewayConfigured(payload.gatewayConfigured === true);
+      })
+      .catch(() => {
+        if (!cancelled) setGatewayConfigured(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const resolveAndPlay = useCallback(async (item: PlayerQueueItem, index: number) => {
     const generation = ++requestGeneration.current;
@@ -88,6 +171,23 @@ export function WebMusicApp() {
       setMessage(`Đang phát ${item.name}`);
     } catch (cause) {
       if (generation !== requestGeneration.current) return;
+      const preview = item.previewUrl?.trim() ?? "";
+      if (/^https?:\/\//i.test(preview)) {
+        try {
+          audio.pause();
+          audio.src = preview;
+          audio.load();
+          setCurrentIndex(index);
+          await audio.play();
+          if (generation !== requestGeneration.current) return;
+          setPlaying(true);
+          setMessage(`Đang phát bản nghe thử của ${item.name}`);
+          setError("Không lấy được nguồn đầy đủ nên đang dùng bản nghe thử.");
+          return;
+        } catch {
+          // Fall through to the original resolver error below.
+        }
+      }
       setPlaying(false);
       const detail = cause instanceof Error ? cause.message : "Không thể phát bài hát này.";
       setError(detail);
@@ -117,14 +217,28 @@ export function WebMusicApp() {
 
   const playNext = useCallback(async () => {
     if (queue.length === 0) return;
+    if (repeatMode === "one" && currentIndex >= 0) {
+      await resolveAndPlay(queue[currentIndex], currentIndex);
+      return;
+    }
+    if (shuffle && queue.length > 1) {
+      let next = currentIndex;
+      while (next === currentIndex) next = Math.floor(Math.random() * queue.length);
+      await resolveAndPlay(queue[next], next);
+      return;
+    }
     const next = currentIndex < 0 ? 0 : currentIndex + 1;
     if (next >= queue.length) {
-      setPlaying(false);
-      setMessage("Đã phát hết hàng chờ.");
+      if (repeatMode === "all") {
+        await resolveAndPlay(queue[0], 0);
+      } else {
+        setPlaying(false);
+        setMessage("Đã phát hết hàng chờ.");
+      }
       return;
     }
     await resolveAndPlay(queue[next], next);
-  }, [currentIndex, queue, resolveAndPlay]);
+  }, [currentIndex, queue, repeatMode, resolveAndPlay, shuffle]);
 
   const playPrevious = useCallback(async () => {
     const audio = audioRef.current;
@@ -132,8 +246,12 @@ export function WebMusicApp() {
       audio.currentTime = 0;
       return;
     }
-    if (currentIndex > 0) await resolveAndPlay(queue[currentIndex - 1], currentIndex - 1);
-  }, [currentIndex, queue, resolveAndPlay]);
+    if (currentIndex > 0) {
+      await resolveAndPlay(queue[currentIndex - 1], currentIndex - 1);
+    } else if (repeatMode === "all" && queue.length > 0) {
+      await resolveAndPlay(queue[queue.length - 1], queue.length - 1);
+    }
+  }, [currentIndex, queue, repeatMode, resolveAndPlay]);
 
   const togglePlayback = useCallback(async () => {
     const audio = audioRef.current;
@@ -155,6 +273,38 @@ export function WebMusicApp() {
       setPlaying(false);
     }
   }, [current, currentIndex, playAllResults, playIndex, queue.length, resolveAndPlay, results.length]);
+
+  const removeQueueItem = useCallback((index: number) => {
+    setQueue((items) => items.filter((_, itemIndex) => itemIndex !== index));
+    if (index === currentIndex) {
+      requestGeneration.current += 1;
+      audioRef.current?.pause();
+      if (audioRef.current) audioRef.current.removeAttribute("src");
+      setCurrentIndex(-1);
+      setPlaying(false);
+      setPosition(0);
+      setDuration(0);
+      setMessage("Đã xóa bài đang phát khỏi hàng chờ.");
+    } else if (index < currentIndex) {
+      setCurrentIndex((value) => Math.max(-1, value - 1));
+    }
+  }, [currentIndex]);
+
+  const clearQueue = useCallback(() => {
+    requestGeneration.current += 1;
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    }
+    setQueue([]);
+    setCurrentIndex(-1);
+    setPlaying(false);
+    setPosition(0);
+    setDuration(0);
+    setMessage("Đã xóa hàng chờ.");
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -265,6 +415,11 @@ export function WebMusicApp() {
   }
 
   const queueLabel = useMemo(() => queue.length > 0 ? `${queue.length} bài` : "Trống", [queue.length]);
+  const gatewayLabel = gatewayConfigured === null
+    ? "Đang kiểm tra nguồn nhạc…"
+    : gatewayConfigured
+      ? "Nguồn nhạc Web đã sẵn sàng"
+      : "Chưa cấu hình nguồn nhạc Web";
 
   return (
     <main className="app-shell">
@@ -281,7 +436,11 @@ export function WebMusicApp() {
 
       <section className="content" id="home">
         <header className="topbar">
-          <div><p className="eyebrow">SPOTIFLAC WEB</p><h1>Nghe nhạc theo cách của bạn</h1></div>
+          <div>
+            <p className="eyebrow">SPOTIFLAC WEB</p>
+            <h1>Nghe nhạc theo cách của bạn</h1>
+            <p className={`gateway-status ${gatewayConfigured ? "ready" : ""}`}>{gatewayLabel}</p>
+          </div>
           <PwaInstallButton />
         </header>
 
@@ -306,22 +465,32 @@ export function WebMusicApp() {
             ) : results.map((track) => (
               <article className="track-row" key={`${track.providerId}:${track.id}`}>
                 <div className="result-art" aria-hidden="true">{track.coverUrl ? <img src={track.coverUrl} alt="" /> : "♪"}</div>
-                <div className="result-meta"><strong>{track.name}</strong><span>{track.artistName || "Không rõ nghệ sĩ"}{track.albumName ? ` · ${track.albumName}` : ""}</span></div>
-                <span className="result-quality">{track.quality || "Online"}</span>
+                <div className="result-meta">
+                  <strong>{track.name}</strong>
+                  <span>{track.artistName || "Không rõ nghệ sĩ"}{track.albumName ? ` · ${track.albumName}` : ""}</span>
+                </div>
+                <span className="result-quality">{track.quality || (track.durationMs ? formatTime(track.durationMs / 1000) : "Online")}</span>
                 <button className="round-action primary-action" type="button" aria-label={`Phát ${track.name}`} onClick={() => void playTrackNow(track)}>▶</button>
                 <button className="round-action" type="button" aria-label={`Thêm ${track.name} vào hàng chờ`} onClick={() => setQueue((items) => [...items, queueItem(track)])}>＋</button>
+                <a className="round-action download-action" aria-label={`Tải ${track.name}`} href={downloadUrl(track)}>↓</a>
               </article>
             ))}
           </div>
         </section>
 
         <section id="queue" className="queue-section" aria-labelledby="queue-title">
-          <div className="section-title"><h2 id="queue-title">Hàng chờ</h2><span>{queueLabel}</span></div>
+          <div className="section-title">
+            <h2 id="queue-title">Hàng chờ</h2>
+            <div className="section-actions"><span>{queueLabel}</span>{queue.length > 0 ? <button className="text-action" type="button" onClick={clearQueue}>Xóa hàng chờ</button> : null}</div>
+          </div>
           <div className="queue-list">
             {queue.length === 0 ? <div className="empty-state compact"><span>Hàng chờ đang trống.</span></div> : queue.map((item, index) => (
-              <button type="button" className={`queue-item${index === currentIndex ? " active" : ""}`} key={item.queueId} onClick={() => void playIndex(index)}>
-                <span>{index === currentIndex && playing ? "▮▮" : index + 1}</span><strong>{item.name}</strong><small>{item.artistName}</small>
-              </button>
+              <div className={`queue-row${index === currentIndex ? " active" : ""}`} key={item.queueId}>
+                <button type="button" className="queue-item" onClick={() => void playIndex(index)}>
+                  <span>{index === currentIndex && playing ? "▮▮" : index + 1}</span><strong>{item.name}</strong><small>{item.artistName}</small>
+                </button>
+                <button type="button" className="queue-remove" aria-label={`Xóa ${item.name} khỏi hàng chờ`} onClick={() => removeQueueItem(index)}>×</button>
+              </div>
             ))}
           </div>
         </section>
@@ -334,9 +503,11 @@ export function WebMusicApp() {
         </div>
         <div className="transport">
           <div className="player-controls">
+            <button type="button" className={shuffle ? "mode-active" : ""} aria-label={shuffle ? "Tắt phát ngẫu nhiên" : "Bật phát ngẫu nhiên"} onClick={() => setShuffle((value) => !value)}>⌘</button>
             <button type="button" aria-label="Bài trước" onClick={() => void playPrevious()}>‹</button>
             <button type="button" className="play" aria-label={playing ? "Tạm dừng" : "Phát"} onClick={() => void togglePlayback()} disabled={loading}>{loading ? "…" : playing ? "Ⅱ" : "▶"}</button>
             <button type="button" aria-label="Bài tiếp" onClick={() => void playNext()}>›</button>
+            <button type="button" className={repeatMode !== "off" ? "mode-active" : ""} aria-label={`Lặp: ${repeatMode}`} onClick={() => setRepeatMode((mode) => mode === "off" ? "all" : mode === "all" ? "one" : "off")}>{repeatMode === "one" ? "↻¹" : "↻"}</button>
           </div>
           <div className="timeline">
             <span>{formatTime(position)}</span>
