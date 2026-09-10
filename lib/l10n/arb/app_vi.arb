@@ -167,5 +167,95 @@
   "trackMetadataService": "Nguồn",
   "trackMetadataPlay": "Phát",
   "trackMetadataShare": "Chia sẻ",
-  "trackMetadataDelete": "Xóa"
+  "trackMetadataDelete": "Xóa",
+  "setupGrantPermission": "Cấp quyền",
+  "setupSkip": "Bỏ qua lúc này",
+  "setupStorageAccessRequired": "Cần quyền truy cập bộ nhớ",
+  "setupStorageAccessMessageAndroid11": "Android 11 trở lên cần quyền \"Truy cập tất cả tệp\" để lưu nhạc vào thư mục tải xuống bạn đã chọn.",
+  "setupOpenSettings": "Mở cài đặt",
+  "setupPermissionDeniedMessage": "Quyền truy cập đã bị từ chối. Vui lòng cấp các quyền cần thiết để tiếp tục.",
+  "setupPermissionRequired": "Cần quyền {permissionType}",
+  "@setupPermissionRequired": {
+    "placeholders": {
+      "permissionType": {
+        "type": "String"
+      }
+    }
+  },
+  "setupPermissionRequiredMessage": "Quyền {permissionType} giúp ứng dụng hoạt động đầy đủ. Bạn có thể thay đổi quyền này sau trong Cài đặt.",
+  "@setupPermissionRequiredMessage": {
+    "placeholders": {
+      "permissionType": {
+        "type": "String"
+      }
+    }
+  },
+  "setupUseDefaultFolder": "Dùng thư mục mặc định?",
+  "setupNoFolderSelected": "Bạn chưa chọn thư mục. Bạn có muốn dùng thư mục Music mặc định không?",
+  "setupUseDefault": "Dùng mặc định",
+  "setupDownloadLocationTitle": "Vị trí tải xuống",
+  "setupDownloadLocationIosMessage": "Trên iOS, nhạc tải xuống được lưu trong thư mục Documents của ứng dụng. Bạn có thể mở các tệp này bằng ứng dụng Tệp.",
+  "setupAppDocumentsFolder": "Thư mục Documents của ứng dụng",
+  "setupAppDocumentsFolderSubtitle": "Khuyên dùng — có thể truy cập bằng ứng dụng Tệp",
+  "setupChooseFromFiles": "Chọn trong Tệp",
+  "setupChooseFromFilesSubtitle": "Chọn iCloud hoặc vị trí khác",
+  "setupIosEmptyFolderWarning": "Giới hạn của iOS: Không thể chọn thư mục trống. Hãy chọn thư mục có ít nhất một tệp.",
+  "setupIcloudNotSupported": "Không hỗ trợ iCloud Drive. Vui lòng dùng thư mục Documents của ứng dụng.",
+  "setupDownloadInFlac": "Tải nhạc chất lượng lossless và Hi-Res",
+  "setupStorageGranted": "Đã cấp quyền bộ nhớ!",
+  "setupStorageRequired": "Cần quyền bộ nhớ",
+  "setupStorageDescription": "SpotiFLAC cần quyền bộ nhớ để lưu các tệp nhạc bạn tải xuống.",
+  "setupNotificationGranted": "Đã cấp quyền thông báo!",
+  "setupNotificationEnable": "Bật thông báo",
+  "setupFolderChoose": "Chọn thư mục tải xuống",
+  "setupFolderDescription": "Chọn thư mục dùng để lưu nhạc tải xuống.",
+  "setupSelectFolder": "Chọn thư mục",
+  "setupEnableNotifications": "Bật thông báo",
+  "setupNotificationBackgroundDescription": "Nhận thông báo về tiến trình và khi tải xong để bạn theo dõi các lượt tải ngay cả khi ứng dụng chạy nền.",
+  "setupSkipForNow": "Bỏ qua lúc này",
+  "setupNext": "Tiếp",
+  "setupGetStarted": "Bắt đầu",
+  "setupAllowAccessToManageFiles": "Ở màn hình tiếp theo, hãy bật \"Cho phép truy cập để quản lý tất cả tệp\".",
+  "setupLanguageTitle": "Chọn ngôn ngữ",
+  "setupLanguageDescription": "Chọn ngôn ngữ bạn muốn dùng cho ứng dụng. Bạn có thể đổi lại sau trong Cài đặt.",
+  "setupLanguageSystemDefault": "Theo hệ thống",
+  "dialogCancel": "Hủy",
+  "dialogSave": "Lưu",
+  "dialogDelete": "Xóa",
+  "dialogRetry": "Thử lại",
+  "dialogClear": "Xóa",
+  "dialogDone": "Xong",
+  "dialogImport": "Nhập",
+  "dialogDownload": "Tải xuống",
+  "previewPlay": "Phát bản nghe thử",
+  "previewStop": "Dừng bản nghe thử",
+  "previewUnavailable": "Không có bản nghe thử",
+  "dialogDiscard": "Bỏ thay đổi",
+  "dialogRemove": "Gỡ",
+  "dialogUninstall": "Gỡ cài đặt",
+  "dialogDiscardChanges": "Bỏ các thay đổi?",
+  "dialogUnsavedChanges": "Bạn có thay đổi chưa được lưu. Bạn có muốn bỏ các thay đổi này không?",
+  "dialogClearAll": "Xóa tất cả",
+  "dialogRemoveExtension": "Gỡ tiện ích",
+  "dialogRemoveExtensionMessage": "Bạn có chắc muốn gỡ tiện ích này không? Thao tác này không thể hoàn tác.",
+  "dialogUninstallExtension": "Gỡ cài đặt tiện ích?",
+  "dialogUninstallExtensionMessage": "Bạn có chắc muốn gỡ {extensionName} không?",
+  "@dialogUninstallExtensionMessage": {
+    "placeholders": {
+      "extensionName": {
+        "type": "String"
+      }
+    }
+  },
+  "dialogClearHistoryTitle": "Xóa lịch sử",
+  "dialogClearHistoryMessage": "Bạn có chắc muốn xóa toàn bộ lịch sử tải xuống không? Thao tác này không thể hoàn tác.",
+  "dialogDeleteSelectedTitle": "Xóa mục đã chọn",
+  "dialogDeleteSelectedMessage": "Xóa {count} bài hát khỏi lịch sử?\n\nThao tác này cũng sẽ xóa các tệp khỏi bộ nhớ.",
+  "@dialogDeleteSelectedMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
