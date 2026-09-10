@@ -1,16 +1,6 @@
 name: Web App CI
 
 on:
-  push:
-    branches:
-      - feature/streaming-web-vietnamese
-    paths:
-      - 'webapp/**'
-      - '.github/workflows/web-ci.yml'
-  pull_request:
-    paths:
-      - 'webapp/**'
-      - '.github/workflows/web-ci.yml'
   workflow_dispatch:
 
 permissions:
@@ -25,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: feature/streaming-web-vietnamese
 
       - name: Setup Node
         uses: actions/setup-node@v5
