@@ -1,0 +1,238 @@
+name: Apply Vietnamese Batch 1
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/streaming-web-vietnamese
+    paths:
+      - ".github/workflows/apply-vietnamese-batch-1.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: feature/streaming-web-vietnamese
+
+      - name: Merge natural Vietnamese translations
+        run: |
+          python3 - <<'PY'
+          import json, re
+          from pathlib import Path
+
+          path = Path('lib/l10n/arb/app_vi.arb')
+          base_path = Path('lib/l10n/arb/app_en.arb')
+          vi = json.loads(path.read_text(encoding='utf-8'))
+          base = json.loads(base_path.read_text(encoding='utf-8'))
+          translations = {
+            'progressReadingCsv': 'Đang đọc CSV...',
+            'searchSongs': 'Bài hát',
+            'searchArtists': 'Nghệ sĩ',
+            'searchAlbums': 'Album',
+            'searchPlaylists': 'Danh sách phát',
+            'searchSortTitle': 'Sắp xếp kết quả',
+            'searchSortDefault': 'Mặc định',
+            'searchSortTitleAZ': 'Tên bài hát (A–Z)',
+            'searchSortTitleZA': 'Tên bài hát (Z–A)',
+            'searchSortArtistAZ': 'Nghệ sĩ (A–Z)',
+            'searchSortArtistZA': 'Nghệ sĩ (Z–A)',
+            'searchSortDurationShort': 'Thời lượng (ngắn nhất)',
+            'searchSortDurationLong': 'Thời lượng (dài nhất)',
+            'searchSortDateOldest': 'Ngày phát hành (cũ nhất)',
+            'searchSortDateNewest': 'Ngày phát hành (mới nhất)',
+            'tooltipPlay': 'Phát',
+            'filenameFormat': 'Cách đặt tên tệp',
+            'filenameShowAdvancedTags': 'Hiện thẻ nâng cao',
+            'filenameShowAdvancedTagsDescription': 'Bật các thẻ định dạng nâng cao cho số thứ tự bài hát và mẫu ngày tháng',
+            'folderOrganizationNone': 'Không sắp xếp',
+            'folderOrganizationByPlaylist': 'Theo danh sách phát',
+            'folderOrganizationByPlaylistSubtitle': 'Tạo thư mục riêng cho từng danh sách phát',
+            'folderOrganizationByArtist': 'Theo nghệ sĩ',
+            'folderOrganizationByAlbum': 'Theo album',
+            'folderOrganizationByArtistAlbum': 'Nghệ sĩ/Album',
+            'folderOrganizationDescription': 'Sắp xếp nhạc đã tải vào các thư mục',
+            'folderOrganizationNoneSubtitle': 'Lưu tất cả tệp trong thư mục tải xuống',
+            'folderOrganizationByArtistSubtitle': 'Tạo thư mục riêng cho từng nghệ sĩ',
+            'folderOrganizationByAlbumSubtitle': 'Tạo thư mục riêng cho từng album',
+            'folderOrganizationByArtistAlbumSubtitle': 'Tạo thư mục lồng nhau theo nghệ sĩ và album',
+            'updateAvailable': 'Có bản cập nhật',
+            'updateLater': 'Để sau',
+            'updateStartingDownload': 'Đang bắt đầu tải xuống...',
+            'updateDownloadFailed': 'Tải xuống thất bại',
+            'updateFailedMessage': 'Không thể tải bản cập nhật',
+            'updateNewVersionReady': 'Đã có phiên bản mới',
+            'updateRequiredTitle': 'Bắt buộc cập nhật',
+            'updateRequiredNotice': 'Phiên bản này đã chậm hơn {count} bản phát hành và không còn được hỗ trợ. Hãy cập nhật để tiếp tục sử dụng ứng dụng.',
+            'updateCurrent': 'Hiện tại',
+            'updateNew': 'Mới',
+            'updateDownloading': 'Đang tải xuống...',
+            'updateWhatsNew': 'Có gì mới',
+            'updateDownloadInstall': 'Tải xuống & cài đặt',
+            'updateDontRemind': 'Không nhắc lại',
+            'providerPriorityTitle': 'Ưu tiên nguồn tải xuống',
+            'providerPriorityDescription': 'Kéo để sắp xếp thứ tự các nguồn tải xuống. Khi tải bài hát, ứng dụng sẽ thử lần lượt từ trên xuống dưới.',
+            'providerPriorityInfo': 'Nếu bài hát không có ở nguồn đầu tiên, ứng dụng sẽ tự động thử nguồn tiếp theo.',
+            'providerPriorityFallbackExtensionsDescription': 'Chọn các tiện ích tải xuống được phép dùng khi tự động thử nguồn dự phòng.',
+            'providerPriorityFallbackExtensionsHint': 'Chỉ hiển thị các tiện ích đang bật và có khả năng tải xuống.',
+            'providerExtension': 'Tiện ích',
+            'metadataProviderPriorityTitle': 'Ưu tiên nguồn thông tin bài hát',
+            'metadataProviderPriorityDescription': 'Kéo để sắp xếp thứ tự các nguồn metadata. Ứng dụng sẽ thử từ trên xuống dưới khi tìm bài hát và lấy thông tin.',
+            'metadataProviderPriorityInfo': 'Deezer không giới hạn số yêu cầu và được khuyên dùng làm nguồn chính. Spotify có thể giới hạn khi gửi quá nhiều yêu cầu.',
+            'logTitle': 'Nhật ký',
+            'logCopied': 'Đã sao chép nhật ký vào bộ nhớ tạm',
+            'logSearchHint': 'Tìm trong nhật ký...',
+            'logFilterLevel': 'Mức độ',
+            'logFilterSection': 'Bộ lọc',
+            'logShareLogs': 'Chia sẻ nhật ký',
+            'logClearLogs': 'Xóa nhật ký',
+            'logClearLogsTitle': 'Xóa nhật ký',
+            'logClearLogsMessage': 'Bạn có chắc muốn xóa toàn bộ nhật ký không?',
+            'logFilterBySeverity': 'Lọc nhật ký theo mức độ nghiêm trọng',
+            'logNoLogsYet': 'Chưa có nhật ký',
+            'logNoLogsYetSubtitle': 'Nhật ký sẽ xuất hiện ở đây trong quá trình bạn sử dụng ứng dụng',
+            'logEntriesFiltered': 'Mục ({count} sau khi lọc)',
+            'logEntries': 'Mục ({count})',
+            'channelStable': 'Ổn định',
+            'channelPreview': 'Thử nghiệm',
+            'sectionSearchSource': 'Nguồn tìm kiếm',
+            'sectionDownload': 'Tải xuống',
+            'sectionPerformance': 'Hiệu năng',
+            'sectionApp': 'Ứng dụng',
+            'sectionData': 'Dữ liệu',
+            'sectionDebug': 'Gỡ lỗi',
+            'sectionService': 'Nguồn',
+            'sectionAudioQuality': 'Chất lượng âm thanh',
+            'sectionFileSettings': 'Cài đặt tệp',
+            'sectionLyrics': 'Lời bài hát',
+            'lyricsMode': 'Cách lưu lời bài hát',
+            'lyricsModeDescription': 'Chọn cách lưu lời bài hát cùng nhạc tải xuống',
+            'lyricsModeEmbed': 'Nhúng vào tệp',
+            'lyricsModeEmbedSubtitle': 'Lưu lời bài hát bên trong metadata của tệp FLAC',
+            'lyricsModeExternal': 'Tệp .lrc riêng',
+            'lyricsModeExternalSubtitle': 'Lưu tệp .lrc riêng cho các trình phát như Samsung Music',
+            'lyricsModeBoth': 'Cả hai',
+            'lyricsModeBothSubtitle': 'Vừa nhúng vừa lưu tệp .lrc',
+            'sectionColor': 'Màu sắc',
+            'sectionTheme': 'Chủ đề',
+            'sectionLayout': 'Bố cục',
+            'sectionLanguage': 'Ngôn ngữ',
+            'appearanceLanguage': 'Ngôn ngữ ứng dụng',
+            'settingsAppearanceSubtitle': 'Chủ đề, màu sắc và hiển thị',
+            'settingsDownloadSubtitle': 'Nguồn, chất lượng và dự phòng',
+            'settingsExtensionsSubtitle': 'Quản lý nguồn tải xuống',
+            'settingsLogsSubtitle': 'Xem nhật ký ứng dụng để gỡ lỗi',
+            'loadingSharedLink': 'Đang mở liên kết được chia sẻ...',
+            'pressBackAgainToExit': 'Nhấn quay lại lần nữa để thoát',
+            'downloadAllCount': 'Tải tất cả ({count})',
+            'tracksCount': '{count} bài hát',
+            'trackCopyFilePath': 'Sao chép đường dẫn tệp',
+            'trackRemoveFromDevice': 'Xóa khỏi thiết bị',
+            'trackLoadLyrics': 'Tải lời bài hát',
+            'trackMetadata': 'Thông tin bài hát',
+            'trackFileInfo': 'Thông tin tệp',
+            'trackLyrics': 'Lời bài hát',
+            'trackFileNotFound': 'Không tìm thấy tệp',
+            'trackOpenInDeezer': 'Mở trong Deezer',
+            'trackOpenInSpotify': 'Mở trong Spotify',
+            'trackTrackName': 'Tên bài hát',
+            'trackArtist': 'Nghệ sĩ',
+            'trackAlbumArtist': 'Nghệ sĩ album',
+            'trackAlbum': 'Album',
+            'trackTrackNumber': 'Số thứ tự bài hát',
+            'trackDiscNumber': 'Số đĩa',
+            'trackDuration': 'Thời lượng',
+            'trackAudioQuality': 'Chất lượng âm thanh',
+            'libraryQualityLabelFileFormat': 'Định dạng tệp',
+            'trackReleaseDate': 'Ngày phát hành',
+            'trackGenre': 'Thể loại',
+            'trackLabel': 'Hãng phát hành',
+            'trackCopyright': 'Bản quyền',
+            'trackDownloaded': 'Đã tải xuống',
+            'trackCopyLyrics': 'Sao chép lời bài hát',
+            'trackLyricsSource': 'Nguồn: {source}',
+            'trackLyricsNotAvailable': 'Bài hát này chưa có lời',
+            'trackLyricsNotInFile': 'Không tìm thấy lời bài hát trong tệp này',
+            'trackFetchOnlineLyrics': 'Tải lời từ Internet',
+            'trackLyricsTimeout': 'Yêu cầu đã hết thời gian chờ. Hãy thử lại sau.',
+            'trackLyricsLoadFailed': 'Không thể tải lời bài hát',
+            'trackEmbedLyrics': 'Nhúng lời bài hát',
+            'trackLyricsEmbedded': 'Đã nhúng lời bài hát',
+            'trackInstrumental': 'Bản nhạc không lời',
+            'trackCopiedToClipboard': 'Đã sao chép vào bộ nhớ tạm',
+            'trackDeleteConfirmTitle': 'Xóa khỏi thiết bị?',
+            'trackDeleteConfirmMessage': 'Tệp nhạc đã tải sẽ bị xóa vĩnh viễn và mục này cũng bị xóa khỏi lịch sử.',
+            'dateToday': 'Hôm nay',
+            'dateYesterday': 'Hôm qua',
+            'dateDaysAgo': '{count} ngày trước',
+            'dateWeeksAgo': '{count} tuần trước',
+            'dateMonthsAgo': '{count} tháng trước',
+            'storeFilterAll': 'Tất cả',
+            'storeFilterMetadata': 'Thông tin bài hát',
+            'storeFilterDownload': 'Tải xuống',
+            'storeFilterUtility': 'Tiện ích công cụ',
+            'storeFilterLyrics': 'Lời bài hát',
+            'storeFilterIntegration': 'Tích hợp',
+            'storeClearFilters': 'Xóa bộ lọc',
+            'storeAddRepoTitle': 'Thêm kho tiện ích',
+            'storeAddRepoDescription': 'Nhập URL kho GitHub có tệp registry.json để duyệt và cài đặt tiện ích.',
+            'storeRepoUrlLabel': 'URL kho mã nguồn',
+            'storeRepoUrlHint': 'https://github.com/user/repo',
+            'storeAddRepoButton': 'Thêm kho',
+            'storeChangeRepoTooltip': 'Đổi kho tiện ích',
+            'storeRepoDialogTitle': 'Kho tiện ích',
+            'storeRepoDialogCurrent': 'Kho hiện tại:',
+            'storeNewRepoUrlLabel': 'URL kho mới',
+            'storeLoadError': 'Không thể tải kho tiện ích',
+            'storeEmptyNoExtensions': 'Chưa có tiện ích nào',
+            'storeEmptyNoResults': 'Không tìm thấy tiện ích',
+            'extensionId': 'ID',
+            'extensionError': 'Lỗi',
+            'extensionCapabilities': 'Khả năng',
+            'extensionMetadataProvider': 'Nguồn thông tin bài hát',
+            'extensionDownloadProvider': 'Nguồn tải xuống',
+            'extensionLyricsProvider': 'Nguồn lời bài hát',
+            'extensionUrlHandler': 'Xử lý URL',
+            'extensionQualityOptions': 'Tùy chọn chất lượng',
+            'extensionPostProcessingHooks': 'Hook hậu xử lý',
+            'extensionPermissions': 'Quyền truy cập',
+            'extensionSettings': 'Cài đặt',
+            'extensionRemoveButton': 'Gỡ tiện ích',
+            'extensionUpdated': 'Đã cập nhật',
+            'extensionMinAppVersion': 'Phiên bản ứng dụng tối thiểu',
+            'extensionCustomTrackMatching': 'Đối chiếu bài hát tùy chỉnh',
+            'extensionPostProcessing': 'Hậu xử lý',
+          }
+
+          unknown = sorted(set(translations) - set(base))
+          if unknown:
+              raise SystemExit(f'Unknown translation keys: {unknown}')
+
+          placeholder = re.compile(r'\{([A-Za-z_][A-Za-z0-9_]*)')
+          for key, value in translations.items():
+              expected = set(placeholder.findall(str(base[key])))
+              actual = set(placeholder.findall(value))
+              if expected != actual:
+                  raise SystemExit(f'Placeholder mismatch for {key}: {expected} != {actual}')
+
+          vi.update(translations)
+          path.write_text(json.dumps(vi, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(f'Applied {len(translations)} Vietnamese translations')
+          PY
+
+      - name: Validate JSON
+        run: python3 -m json.tool lib/l10n/arb/app_vi.arb >/dev/null
+
+      - name: Commit Vietnamese batch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/l10n/arb/app_vi.arb
+          git diff --cached --quiet && exit 0
+          git commit -m "feat(l10n): expand natural Vietnamese coverage"
+          git push origin HEAD:feature/streaming-web-vietnamese
