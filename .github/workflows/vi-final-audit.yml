@@ -10,7 +10,7 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: feature/streaming-web-vietnamese
       - name: Verify Vietnamese translation completeness
@@ -23,19 +23,21 @@ jobs:
           en = json.loads((root / 'app_en.arb').read_text(encoding='utf-8'))
           vi = json.loads((root / 'app_vi.arb').read_text(encoding='utf-8'))
 
+          # These values are intentionally language-neutral: product/format names,
+          # pure placeholder/URL formats, or canonical technical labels.
           allowed_invariants = {
-              'downloadUrlHint',
               'appName',
-              'keepAndroidOpen',
-              'bitrate',
-              'updateProgress',
-              'unknownId',
-              'extensionRepoId',
               'trackAlbum',
-              'searchAlbums',
               'cueSplitAlbum',
-              'logViewerFileSizeValue',
-              'keepAndroidOpenSubtitle',
+              'aboutKeepAndroidOpen',
+              'cacheSizeOnly',
+              'notifUpdateProgress',
+              'optionsReplayGain',
+              'recentTypeAlbum',
+              'storeRepoUrlHint',
+              'releaseTypeEp',
+              'trackConvertActionLabelLossless',
+              'trackConvertActionLabelLossy',
           }
 
           english_keys = {k for k in en if not k.startswith('@')}
